@@ -95,12 +95,17 @@ namespace Microsoft.BotBuilderSamples
         /// Gets recent mail for the user using the Microsoft Graph API.
         /// </summary>
         /// <returns>An array of recent messages.</returns>
-        public async Task<Message[]> GetRecentMailAsync()
+        public async Task<Message[]> GetRecentMailAsync(int top = 5)
         {
             var graphClient = GetAuthenticatedClient();
-            var messages = await graphClient.Me.MailFolders["inbox"].Messages.GetAsync();
+            var page = await graphClient.Me.MailFolders["inbox"].Messages.GetAsync(config =>
+            {
+                config.QueryParameters.Top = top;
+                config.QueryParameters.Select = new[] { "subject", "from", "receivedDateTime", "isRead" };
+                config.QueryParameters.Orderby = new[] { "receivedDateTime DESC" };
+            });
 
-            return messages.Value?.Take(5).ToArray();
+            return page?.Value?.ToArray() ?? Array.Empty<Message>();
         }
 
         /// <summary>

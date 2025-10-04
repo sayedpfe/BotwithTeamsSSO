@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,8 @@ namespace Microsoft.BotBuilderSamples
     /// </summary>
     public class MainDialog : LogoutDialog
     {
-        protected readonly ILogger _logger;
+        private readonly ILogger _logger;
+        private const string TokenValueKey = "graphToken";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
@@ -37,129 +37,142 @@ namespace Microsoft.BotBuilderSamples
                 new OAuthPromptSettings
                 {
                     ConnectionName = ConnectionName,
-                    Text = "Please Sign In",
                     Title = "Sign In",
-                    Timeout = 300000, // User has 5 minutes to login (1000 * 60 * 5)
+                    Text = "Please sign in to continue.",
+                    Timeout = 300000,
                     EndOnInvalidMessage = true
                 }));
 
-            AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
-
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
-                    PromptStepAsync,
-                    LoginStepAsync,
-                    DisplayTokenPhase1Async,
-                    DisplayTokenPhase2Async,
+                EnsureTokenStepAsync,
+                ExecuteActionStepAsync
             }));
 
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
         }
 
-        /// <summary>
-        /// Prompts the user to sign in.
-        /// </summary>
-        /// <param name="stepContext">The waterfall step context.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task<DialogTurnResult> PromptStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        // Step 1: Obtain token silently; if not present, start OAuthPrompt
+        private async Task<DialogTurnResult> EnsureTokenStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("PromptStepAsync() called.");
-            return await stepContext.BeginDialogAsync(nameof(OAuthPrompt), null, cancellationToken);
+            var options = stepContext.Options as GraphActionOptions ?? new GraphActionOptions { Action = GraphAction.None };
+            stepContext.Values["action"] = options.Action;
+
+            if (options.Action == GraphAction.None)
+            {
+                await stepContext.Context.SendActivityAsync("No actionable command supplied.", cancellationToken: cancellationToken);
+                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+            }
+
+            if (stepContext.Context.Adapter is IUserTokenProvider tokenProvider)
+            {
+                var silent = await tokenProvider.GetUserTokenAsync(stepContext.Context, ConnectionName, null, cancellationToken);
+                if (silent != null && !string.IsNullOrEmpty(silent.Token))
+                {
+                    stepContext.Values[TokenValueKey] = silent.Token;
+                    return await stepContext.NextAsync(null, cancellationToken);
+                }
+            }
+
+            // Need interactive login
+            return await stepContext.BeginDialogAsync(nameof(OAuthPrompt), cancellationToken: cancellationToken);
         }
 
-        /// <summary>
-        /// Handles the login step.
-        /// </summary>
-        /// <param name="stepContext">The waterfall step context.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task<DialogTurnResult> LoginStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        // Step 2: Execute the action using the token
+        private async Task<DialogTurnResult> ExecuteActionStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var tokenResponse = (TokenResponse)stepContext.Result;
-            if (tokenResponse?.Token != null)
+            // If we came from OAuthPrompt, capture token
+            if (!stepContext.Values.ContainsKey(TokenValueKey))
             {
-                try
+                if (stepContext.Result is TokenResponse tokenResponse && !string.IsNullOrEmpty(tokenResponse.Token))
                 {
-                    var client = new SimpleGraphClient(tokenResponse.Token);
-                    var me = await client.GetMeAsync();
-                    var title = !string.IsNullOrEmpty(me.JobTitle) ? me.JobTitle : "Unknown";
-
-                    await stepContext.Context.SendActivityAsync($"You're logged in as {me.DisplayName} ({me.UserPrincipalName}); your job title is: {title}");
-
-                    var photo = await client.GetPhotoAsync();
-
-                    if (!string.IsNullOrEmpty(photo))
-                    {
-                        var cardImage = new CardImage(photo);
-                        var card = new ThumbnailCard(images: new List<CardImage> { cardImage });
-                        var reply = MessageFactory.Attachment(card.ToAttachment());
-
-                        await stepContext.Context.SendActivityAsync(MessageFactory.Text("Sorry! User doesn't have a profile picture to display."), cancellationToken);
-                    }
-                    else
-                    {
-                        await stepContext.Context.SendActivityAsync(MessageFactory.Text("Sorry! User doesn't have a profile picture to display."), cancellationToken);
-                    }
-
-                    return await stepContext.PromptAsync(
-                        nameof(ConfirmPrompt),
-                        new PromptOptions { Prompt = MessageFactory.Text("Would you like to view your token?") },
-                        cancellationToken);
+                    stepContext.Values[TokenValueKey] = tokenResponse.Token;
                 }
-                catch (Exception ex)
+            }
+
+            if (!stepContext.Values.TryGetValue(TokenValueKey, out var tokenObj) || string.IsNullOrEmpty(tokenObj as string))
+            {
+                await stepContext.Context.SendActivityAsync("Authentication required but not completed.", cancellationToken: cancellationToken);
+                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+            }
+
+            var token = (string)tokenObj;
+            var action = (GraphAction)stepContext.Values["action"];
+            var client = new SimpleGraphClient(token);
+
+            try
+            {
+                switch (action)
                 {
-                    _logger.LogError("Error occurred while processing your request.", ex);
+                    case GraphAction.Profile:
+                        await ExecuteProfileAsync(stepContext, client, cancellationToken);
+                        break;
+                    case GraphAction.RecentMail:
+                        await ExecuteRecentMailAsync(stepContext, client, cancellationToken);
+                        break;
+                    case GraphAction.SendTestMail:
+                        await ExecuteSendTestMailAsync(stepContext, client, cancellationToken);
+                        break;
+                    default:
+                        await stepContext.Context.SendActivityAsync("Unknown action.", cancellationToken: cancellationToken);
+                        break;
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Graph action failed.");
+                await stepContext.Context.SendActivityAsync("An error occurred performing the requested action.", cancellationToken: cancellationToken);
+            }
+
+            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+        }
+
+        private static async Task ExecuteProfileAsync(WaterfallStepContext stepContext, SimpleGraphClient client, CancellationToken cancellationToken)
+        {
+            var me = await client.GetMeAsync();
+            var title = string.IsNullOrEmpty(me.JobTitle) ? "Unknown" : me.JobTitle;
+            await stepContext.Context.SendActivityAsync(
+                $"Profile: {me.DisplayName} ({me.UserPrincipalName}) | Title: {title}",
+                cancellationToken: cancellationToken);
+
+            var photo = await client.GetPhotoAsync();
+            if (!string.IsNullOrEmpty(photo))
+            {
+                var card = new ThumbnailCard(images: new List<CardImage> { new CardImage(photo) });
+                await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(card.ToAttachment()), cancellationToken);
             }
             else
             {
-                _logger.LogInformation("Response token is null or empty.");
+                await stepContext.Context.SendActivityAsync("No profile photo found.", cancellationToken: cancellationToken);
             }
-
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Login was not successful, please try again."), cancellationToken);
-            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
-        /// <summary>
-        /// Displays the token if the user confirms.
-        /// </summary>
-        /// <param name="stepContext">The waterfall step context.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task<DialogTurnResult> DisplayTokenPhase1Async(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private static async Task ExecuteRecentMailAsync(WaterfallStepContext stepContext, SimpleGraphClient client, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("DisplayTokenPhase1Async() method called.");
-
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Thank you."), cancellationToken);
-
-            var result = (bool)stepContext.Result;
-            if (result)
+            var messages = await client.GetRecentMailAsync();
+            if (messages.Length == 0)
             {
-                return await stepContext.BeginDialogAsync(nameof(OAuthPrompt), cancellationToken: cancellationToken);
+                await stepContext.Context.SendActivityAsync("No recent inbox messages.", cancellationToken: cancellationToken);
+                return;
             }
 
-            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+            await stepContext.Context.SendActivityAsync("Recent mail:", cancellationToken: cancellationToken);
+            foreach (var m in messages)
+            {
+                var from = m.From?.EmailAddress?.Address ?? "unknown";
+                var stamp = m.ReceivedDateTime?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "";
+                var status = m.IsRead == true ? "[Read]" : "[New]";
+                await stepContext.Context.SendActivityAsync($"{status} {stamp} | {m.Subject} | From: {from}", cancellationToken: cancellationToken);
+            }
         }
 
-        /// <summary>
-        /// Displays the token to the user.
-        /// </summary>
-        /// <param name="stepContext">The waterfall step context.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task<DialogTurnResult> DisplayTokenPhase2Async(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private static async Task ExecuteSendTestMailAsync(WaterfallStepContext stepContext, SimpleGraphClient client, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("DisplayTokenPhase2Async() method called.");
-
-            var tokenResponse = (TokenResponse)stepContext.Result;
-            if (tokenResponse != null)
-            {
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text($"Here is your token: {tokenResponse.Token}"), cancellationToken);
-            }
-
-            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+            var me = await client.GetMeAsync();
+            var to = me.Mail ?? me.UserPrincipalName;
+            await client.SendMailAsync(to, "Test mail from Teams Bot", "This is a test message sent via Microsoft Graph.");
+            await stepContext.Context.SendActivityAsync($"Test mail sent to {to}.", cancellationToken: cancellationToken);
         }
     }
 }

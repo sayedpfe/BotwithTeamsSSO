@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -12,28 +13,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.BotBuilderSamples
 {
-    /// <summary>
-    /// This IBot implementation can run any type of Dialog. The use of type parameterization allows multiple different bots
-    /// to be run at different endpoints within the same project. This can be achieved by defining distinct Controller types
-    /// each with dependency on distinct IBot types, this way ASP Dependency Injection can glue everything together without ambiguity.
-    /// The ConversationState is used by the Dialog system. The UserState isn't, however, it might have been used in a Dialog implementation,
-    /// and the requirement is that all BotState objects are saved at the end of a turn.
-    /// </summary>
-    /// <typeparam name="T">The type of the dialog.</typeparam>
     public class DialogBot<T> : TeamsActivityHandler where T : Dialog
     {
-        protected readonly BotState _conversationState;
+        protected readonly ConversationState _conversationState;
+        protected readonly UserState _userState;
         protected readonly Dialog _dialog;
         protected readonly ILogger _logger;
-        protected readonly BotState _userState;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DialogBot{T}"/> class.
-        /// </summary>
-        /// <param name="conversationState">The conversation state.</param>
-        /// <param name="userState">The user state.</param>
-        /// <param name="dialog">The dialog.</param>
-        /// <param name="logger">The logger.</param>
         public DialogBot(ConversationState conversationState, UserState userState, T dialog, ILogger<DialogBot<T>> logger)
         {
             _conversationState = conversationState;
@@ -42,43 +28,91 @@ namespace Microsoft.BotBuilderSamples
             _logger = logger;
         }
 
-        /// <summary>
-        /// Handles an incoming activity.
-        /// </summary>
-        /// <param name="turnContext">Context object containing information cached for a single turn of conversation with a user.</param>
-        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        /// <returns>A task that represents the work queued to execute.</returns>
-        /// <remarks>
-        /// Reference link: https://docs.microsoft.com/en-us/dotnet/api/microsoft.bot.builder.activityhandler.onturnasync?view=botbuilder-dotnet-stable.
-        /// </remarks>
-        public override async Task OnTurnAsync(
-            ITurnContext turnContext,
-            CancellationToken cancellationToken = default(CancellationToken))
+        public override async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default)
         {
             await base.OnTurnAsync(turnContext, cancellationToken);
-
-            // Save any state changes that might have occurred during the turn.
             await _conversationState.SaveChangesAsync(turnContext, false, cancellationToken);
             await _userState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
-        /// <summary>
-        /// Handles when a message is addressed to the bot.
-        /// </summary>
-        /// <param name="turnContext">Context object containing information cached for a single turn of conversation with a user.</param>
-        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        /// <returns>A Task resolving to either a login card or the adaptive card of the Reddit post.</returns>
-        /// <remarks>
-        /// For more information on bot messaging in Teams, see the documentation
-        /// https://docs.microsoft.com/en-us/microsoftteams/platform/bots/how-to/conversations/conversation-basics?tabs=dotnet#receive-a-message.
-        /// </remarks>
-        protected override async Task OnMessageActivityAsync(
-            ITurnContext<IMessageActivity> turnContext,
-            CancellationToken cancellationToken)
+        protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Running dialog with Message Activity.");
+            var text = (turnContext.Activity.Text ?? string.Empty).Trim().ToLowerInvariant();
 
-            await _dialog.RunAsync(turnContext, _conversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
+            switch (text)
+            {
+                case "help":
+                case "?":
+                    await SendHelpAsync(turnContext, cancellationToken);
+                    return;
+
+                case "profile":
+                    await BeginGraphActionAsync(turnContext, GraphAction.Profile, cancellationToken);
+                    return;
+
+                case "recent mail":
+                case "mail":
+                case "inbox":
+                    await BeginGraphActionAsync(turnContext, GraphAction.RecentMail, cancellationToken);
+                    return;
+
+                case "send test mail":
+                case "send mail":
+                    await BeginGraphActionAsync(turnContext, GraphAction.SendTestMail, cancellationToken);
+                    return;
+
+                case "logout":
+                    await HandleLogoutAsync(turnContext, cancellationToken);
+                    return;
+
+                default:
+                    await turnContext.SendActivityAsync("Unknown command. Type 'help' for options.", cancellationToken: cancellationToken);
+                    return;
+            }
+        }
+
+        private async Task BeginGraphActionAsync(ITurnContext turnContext, GraphAction action, CancellationToken cancellationToken)
+        {
+            var accessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
+            var dialogSet = new DialogSet(accessor);
+            dialogSet.Add(_dialog);
+
+            var dc = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
+            var result = await dc.ContinueDialogAsync(cancellationToken);
+            if (result.Status == DialogTurnStatus.Empty)
+            {
+                await dc.BeginDialogAsync(_dialog.Id, new GraphActionOptions { Action = action }, cancellationToken);
+            }
+        }
+
+        private async Task HandleLogoutAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            if (turnContext.Adapter is IUserTokenProvider tokenProvider)
+            {
+                // Use reflection to access the protected ConnectionName property.
+                var logoutDialog = _dialog as LogoutDialog;
+                var connectionName = logoutDialog?.GetType()
+                    .GetProperty("ConnectionName", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    ?.GetValue(logoutDialog) as string;
+                if (!string.IsNullOrEmpty(connectionName))
+                {
+                    await tokenProvider.SignOutUserAsync(turnContext, connectionName, null, cancellationToken);
+                }
+            }
+
+            await turnContext.SendActivityAsync("Signed out. Type a protected command (e.g., 'profile') to sign in again.", cancellationToken: cancellationToken);
+        }
+
+        private static Task SendHelpAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            return turnContext.SendActivityAsync(
+                "Commands:\n" +
+                " - profile\n" +
+                " - recent mail\n" +
+                " - send test mail\n" +
+                " - logout\n" +
+                " - help",
+                cancellationToken: cancellationToken);
         }
     }
 }
