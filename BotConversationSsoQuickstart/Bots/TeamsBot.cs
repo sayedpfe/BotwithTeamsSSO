@@ -43,7 +43,7 @@ namespace Microsoft.BotBuilderSamples
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    await turnContext.SendActivityAsync(MessageFactory.Text("Welcome to AuthenticationBot. Type anything to get logged in. Type 'logout' to sign-out."), cancellationToken);
+                    await turnContext.SendActivityAsync(MessageFactory.Text("Welcome. Type 'help' for available commands."), cancellationToken);
                 }
             }
         }
@@ -56,10 +56,7 @@ namespace Microsoft.BotBuilderSamples
         /// <returns>A task that represents the work queued to execute.</returns>
         protected override async Task OnTeamsSigninVerifyStateAsync(ITurnContext<IInvokeActivity> turnContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Running dialog with sign-in/verify state from an Invoke Activity.");
-
-            // The OAuth Prompt needs to see the Invoke Activity in order to complete the login process.
-            // Run the Dialog with the new Invoke Activity.
+            _logger.LogInformation("Completing OAuthPrompt from sign-in verify state invoke.");
             await _dialog.RunAsync(turnContext, _conversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken);
         }
     }

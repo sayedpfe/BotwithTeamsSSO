@@ -20,7 +20,10 @@ namespace Microsoft.BotBuilderSamples
         protected readonly Dialog _dialog;
         protected readonly ILogger _logger;
 
-        public DialogBot(ConversationState conversationState, UserState userState, T dialog, ILogger<DialogBot<T>> logger)
+        public DialogBot(ConversationState conversationState,
+                         UserState userState,
+                         T dialog,
+                         ILogger<DialogBot<T>> logger)
         {
             _conversationState = conversationState;
             _userState = userState;
@@ -66,7 +69,7 @@ namespace Microsoft.BotBuilderSamples
                     return;
 
                 default:
-                    await turnContext.SendActivityAsync("Unknown command. Type 'help' for options.", cancellationToken: cancellationToken);
+                    await turnContext.SendActivityAsync("Unknown command. Type 'help' for available commands.", cancellationToken: cancellationToken);
                     return;
             }
         }
@@ -89,18 +92,18 @@ namespace Microsoft.BotBuilderSamples
         {
             if (turnContext.Adapter is IUserTokenProvider tokenProvider)
             {
-                // Use reflection to access the protected ConnectionName property.
                 var logoutDialog = _dialog as LogoutDialog;
                 var connectionName = logoutDialog?.GetType()
                     .GetProperty("ConnectionName", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                     ?.GetValue(logoutDialog) as string;
+
                 if (!string.IsNullOrEmpty(connectionName))
                 {
                     await tokenProvider.SignOutUserAsync(turnContext, connectionName, null, cancellationToken);
                 }
             }
 
-            await turnContext.SendActivityAsync("Signed out. Type a protected command (e.g., 'profile') to sign in again.", cancellationToken: cancellationToken);
+            await turnContext.SendActivityAsync("Signed out. Type 'profile' or 'recent mail' to sign in again.", cancellationToken: cancellationToken);
         }
 
         private static Task SendHelpAsync(ITurnContext turnContext, CancellationToken cancellationToken)
