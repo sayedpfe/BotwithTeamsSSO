@@ -109,6 +109,13 @@ namespace Microsoft.BotBuilderSamples
 
             var tokens = (Dictionary<string, string>)step.Values[TokensKey];
 
+            // Check if this action requires authentication
+            if (IsTicketsAction(opts.Action))
+            {
+                // Ticket operations don't require authentication - skip to next step
+                return await step.NextAsync(null, ct);
+            }
+
             string connection;
             string promptId;
             if (IsGraphAction(opts.Action))
@@ -116,18 +123,13 @@ namespace Microsoft.BotBuilderSamples
                 connection = _graphConnection;
                 promptId = GraphPromptId;
             }
-            else if (IsTicketsAction(opts.Action))
-            {
-                connection = _ticketsConnection;
-                promptId = TicketsPromptId;
-            }
             else
             {
                 await step.Context.SendActivityAsync("Unsupported action.", cancellationToken: ct);
                 return await step.EndDialogAsync(cancellationToken: ct);
             }
 
-            // Silent attempt
+            // Silent attempt for Graph actions
             if (step.Context.Adapter is IUserTokenProvider tp)
             {
                 var silent = await tp.GetUserTokenAsync(step.Context, connection, null, ct);
@@ -149,35 +151,42 @@ namespace Microsoft.BotBuilderSamples
             var action = (GraphAction)step.Values[ActionKey];
             var tokens = (Dictionary<string, string>)step.Values[TokensKey];
 
-            string connectionNeeded = IsGraphAction(action) ? _graphConnection : _ticketsConnection;
+            string tokenValue = null;
 
-            // If came from prompt, capture token
-            if (!tokens.ContainsKey(connectionNeeded))
+            // Handle Graph actions that require authentication
+            if (IsGraphAction(action))
             {
-                if (step.Result is TokenResponse tokenResponse && !string.IsNullOrEmpty(tokenResponse.Token))
+                string connectionNeeded = _graphConnection;
+
+                // If came from prompt, capture token
+                if (!tokens.ContainsKey(connectionNeeded))
                 {
-                    tokens[connectionNeeded] = tokenResponse.Token;
+                    if (step.Result is TokenResponse tokenResponse && !string.IsNullOrEmpty(tokenResponse.Token))
+                    {
+                        tokens[connectionNeeded] = tokenResponse.Token;
+                    }
+                }
+
+                if (!tokens.TryGetValue(connectionNeeded, out tokenValue))
+                {
+                    await step.Context.SendActivityAsync("Authentication failed or was cancelled.", cancellationToken: ct);
+                    return await step.EndDialogAsync(cancellationToken: ct);
                 }
             }
-
-            if (!tokens.TryGetValue(connectionNeeded, out var tokenValue))
-            {
-                await step.Context.SendActivityAsync("Authentication failed or was cancelled.", cancellationToken: ct);
-                return await step.EndDialogAsync(cancellationToken: ct);
-            }
+            // Ticket actions don't require authentication, so tokenValue remains null
 
             try
             {
                 switch (action)
                 {
                     case GraphAction.Profile:
-                        await step.Context.SendActivityAsync("Graph action placeholder (implement OBO or separate Graph connection usage).", cancellationToken: ct);
+                        await ExecuteProfileAsync(step, tokenValue, ct);
                         break;
                     case GraphAction.RecentMail:
-                        await step.Context.SendActivityAsync("Recent mail not implemented with separate token yet.", cancellationToken: ct);
+                        await ExecuteRecentMailAsync(step, tokenValue, ct);
                         break;
                     case GraphAction.SendTestMail:
-                        await step.Context.SendActivityAsync("Send mail not implemented in dual-connection sample.", cancellationToken: ct);
+                        await ExecuteSendTestMailAsync(step, tokenValue, ct);
                         break;
                     case GraphAction.CreateTicket:
                         await ExecuteCreateTicketAsync(step, tokenValue, ct);
@@ -201,22 +210,146 @@ namespace Microsoft.BotBuilderSamples
 
         private async Task ExecuteCreateTicketAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
         {
-            var ticket = await _ticketClient.CreateAsync(apiToken, "Sample Ticket", "Generated from bot command.", ct);
+            // Note: apiToken is not used since API has AuthType: None
+            var ticket = await _ticketClient.CreateAsync("Sample Ticket", "Generated from bot command.", ct);
             await step.Context.SendActivityAsync(ticket == null ? "Ticket creation failed." :
-                $"Ticket created: {ticket.Id} ({ticket.Title})", cancellationToken: ct);
+                $"✅ Ticket created: {ticket.Id} ({ticket.Title}) by Test User", cancellationToken: ct);
         }
 
         private async Task ExecuteListTicketsAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
         {
-            var list = await _ticketClient.ListAsync(apiToken, 5, ct);
+            // Note: apiToken is not used since API has AuthType: None
+            var list = await _ticketClient.ListAsync(5, ct);
             if (list == null || list.Length == 0)
             {
                 await step.Context.SendActivityAsync("No tickets found.", cancellationToken: ct);
                 return;
             }
+            
+            await step.Context.SendActivityAsync("**Your Support Tickets:**", cancellationToken: ct);
             foreach (var t in list)
             {
-                await step.Context.SendActivityAsync($"[{t.Status}] {t.Title} ({t.Id})", cancellationToken: ct);
+                await step.Context.SendActivityAsync($"🎫 **[{t.Status}]** {t.Title} (ID: {t.Id})", cancellationToken: ct);
+            }
+        }
+
+        private async Task ExecuteProfileAsync(WaterfallStepContext step, string graphToken, CancellationToken ct)
+        {
+            try
+            {
+                var graphClient = new SimpleGraphClient(graphToken);
+                var user = await graphClient.GetMeAsync();
+                
+                if (user != null)
+                {
+                    var message = $"**Profile Information**\n\n" +
+                                  $"**Name:** {user.DisplayName}\n" +
+                                  $"**Email:** {user.Mail ?? user.UserPrincipalName}\n" +
+                                  $"**Job Title:** {user.JobTitle ?? "Not specified"}\n" +
+                                  $"**Department:** {user.Department ?? "Not specified"}";
+
+                    await step.Context.SendActivityAsync(MessageFactory.Text(message), cancellationToken: ct);
+
+                    // Try to get and send user photo
+                    try
+                    {
+                        var photoBase64 = await graphClient.GetPhotoAsync();
+                        if (!string.IsNullOrEmpty(photoBase64))
+                        {
+                            var photoAttachment = new Attachment
+                            {
+                                Name = "Profile Photo",
+                                ContentType = "image/png",
+                                ContentUrl = photoBase64
+                            };
+                            
+                            var photoMessage = MessageFactory.Attachment(photoAttachment);
+                            await step.Context.SendActivityAsync(photoMessage, cancellationToken: ct);
+                        }
+                    }
+                    catch (Exception photoEx)
+                    {
+                        _logger.LogWarning(photoEx, "Could not retrieve user photo");
+                        await step.Context.SendActivityAsync("Profile retrieved, but photo could not be loaded.", cancellationToken: ct);
+                    }
+                }
+                else
+                {
+                    await step.Context.SendActivityAsync("Could not retrieve profile information.", cancellationToken: ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user profile");
+                await step.Context.SendActivityAsync("An error occurred while retrieving your profile.", cancellationToken: ct);
+            }
+        }
+
+        private async Task ExecuteRecentMailAsync(WaterfallStepContext step, string graphToken, CancellationToken ct)
+        {
+            try
+            {
+                var graphClient = new SimpleGraphClient(graphToken);
+                var messages = await graphClient.GetRecentMailAsync(5);
+                
+                if (messages != null && messages.Length > 0)
+                {
+                    await step.Context.SendActivityAsync("**Recent Emails:**", cancellationToken: ct);
+                    
+                    foreach (var message in messages)
+                    {
+                        var from = message.From?.EmailAddress?.Name ?? message.From?.EmailAddress?.Address ?? "Unknown";
+                        var subject = message.Subject ?? "(No subject)";
+                        var received = message.ReceivedDateTime?.ToString("MMM dd, yyyy HH:mm") ?? "Unknown date";
+                        var readStatus = message.IsRead == true ? "📖" : "📧";
+                        
+                        var emailInfo = $"{readStatus} **{subject}**\n" +
+                                       $"From: {from}\n" +
+                                       $"Received: {received}\n";
+                        
+                        await step.Context.SendActivityAsync(MessageFactory.Text(emailInfo), cancellationToken: ct);
+                    }
+                }
+                else
+                {
+                    await step.Context.SendActivityAsync("No recent emails found.", cancellationToken: ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving recent emails");
+                await step.Context.SendActivityAsync("An error occurred while retrieving your recent emails.", cancellationToken: ct);
+            }
+        }
+
+        private async Task ExecuteSendTestMailAsync(WaterfallStepContext step, string graphToken, CancellationToken ct)
+        {
+            try
+            {
+                var graphClient = new SimpleGraphClient(graphToken);
+                var user = await graphClient.GetMeAsync();
+                
+                if (user?.Mail != null || user?.UserPrincipalName != null)
+                {
+                    var recipientEmail = user.Mail ?? user.UserPrincipalName;
+                    var subject = "Test Email from Teams Bot";
+                    var content = $"Hello {user.DisplayName},\n\n" +
+                                 "This is a test email sent from your Teams SSO Bot.\n\n" +
+                                 $"Sent at: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n\n" +
+                                 "Best regards,\nYour Teams Bot";
+
+                    await graphClient.SendMailAsync(recipientEmail, subject, content);
+                    await step.Context.SendActivityAsync($"✅ Test email sent successfully to {recipientEmail}", cancellationToken: ct);
+                }
+                else
+                {
+                    await step.Context.SendActivityAsync("Could not determine your email address to send test mail.", cancellationToken: ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending test email");
+                await step.Context.SendActivityAsync("An error occurred while sending the test email.", cancellationToken: ct);
             }
         }
     }

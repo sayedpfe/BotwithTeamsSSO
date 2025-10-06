@@ -23,10 +23,10 @@ namespace Microsoft.BotBuilderSamples.Services
                 ?? throw new System.InvalidOperationException("TicketApi:BaseUrl missing");
         }
 
-        public async Task<TicketDto?> CreateAsync(string token, string title, string description, CancellationToken ct)
+        public async Task<TicketDto?> CreateAsync(string title, string description, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // No authentication required - API is configured with AuthType: None
             req.Content = JsonContent.Create(new CreateTicketRequest(title, description));
             var resp = await _http.SendAsync(req, ct);
             var body = await resp.Content.ReadAsStringAsync(ct);
@@ -38,10 +38,10 @@ namespace Microsoft.BotBuilderSamples.Services
             return JsonSerializer.Deserialize<TicketDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<TicketDto[]?> ListAsync(string token, int top, CancellationToken ct)
+        public async Task<TicketDto[]?> ListAsync(int top, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{_base}/api/tickets?top={top}");
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // No authentication required - API is configured with AuthType: None
             var resp = await _http.SendAsync(req, ct);
             if (!resp.IsSuccessStatusCode) return null;
             var json = await resp.Content.ReadAsStringAsync(ct);
