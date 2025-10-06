@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2025-10-05T15:56:46.415" instance="48bd59" url="/diagnostics/runtime" method="GET" type="request" pid="5428,2,7" Connection="Keep-Alive" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="saaliticketsapi.scm.azurewebsites.net" User-Agent="Visual-Studio/17.14.16+36518.9 WebToolsExtension/17.14.122.59099" X-ARR-LOG-ID="d60f1341-7a41-4172-8cc8-15c03c5bce65" CLIENT-IP="45.86.89.182:63764" X-SITE-DEPLOYMENT-ID="SaaliTicketsApi" WAS-DEFAULT-HOSTNAME="saaliticketsapi.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/diagnostics/runtime" X-MS-COLDSTART="1" >
+  <step title="Error occurred" date="2025-10-05T15:56:49.072" type="error" text="The operation was canceled." stackTrace="   at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Web.Http.Filters.ActionFilterAttribute.&lt;CallOnActionExecutedAsync&gt;d__5.MoveNext()
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   at System.Web.Http.Filters.ActionFilterAttribute.&lt;ExecuteActionFilterAsyncCore&gt;d__0.MoveNext()
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   at System.Web.Http.Controllers.ActionFilterResult.&lt;ExecuteAsync&gt;d__2.MoveNext()
+--- End of stack trace from previous location where exception was thrown ---
+   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)
+   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+   at System.Web.Http.Controllers.ExceptionFilterResult.&lt;ExecuteAsync&gt;d__0.MoveNext()" /><!-- duration: 16ms -->
+  <step title="Outgoing response" date="2025-10-05T15:56:49.248" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" Cache-Control="private" X-AspNet-Version="4.0.30319" /><!-- duration: 0ms -->
+</step><!-- duration: 2844ms -->

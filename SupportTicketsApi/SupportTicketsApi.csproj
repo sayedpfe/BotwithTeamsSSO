@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.8.1" />
 	  <PackageReference Include="Azure.Identity" Version="1.11.4" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
 	  <PackageReference Include="Microsoft.Identity.Web" Version="2.19.0" />
     <PackageReference Include="Microsoft.Identity.Web.MicrosoftGraph" Version="2.19.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
@@ -16,8 +17,6 @@
 
   <!-- Generate OpenAPI/Swagger at build time -->
   <Target Name="OpenAPI" AfterTargets="Build" Condition="$(Configuration)=='Release'">
-    <Exec WorkingDirectory="$(OutputPath)" 
-          Command="dotnet $(AssemblyName).dll --urls=http://localhost:0 --generateswagger" 
-          IgnoreExitCode="true" />
+    <Exec WorkingDirectory="$(OutputPath)" Command="dotnet $(AssemblyName).dll --urls=http://localhost:0 --generateswagger" IgnoreExitCode="true" />
   </Target>
 </Project>

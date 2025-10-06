@@ -9,6 +9,7 @@ namespace SupportTicketsApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize] // Protect the entire controller
 public class TicketsController : ControllerBase
 {
     private readonly ITicketRepository _repo;
@@ -33,7 +34,6 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "TicketsScope")]
     public async Task<ActionResult<TicketDto>> Create(CreateTicketRequest request, CancellationToken ct)
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
@@ -52,7 +52,6 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize]
     public async Task<ActionResult<TicketDto>> Get(string id, CancellationToken ct)
     {
         var (userId, _) = GetUserIdentity();
@@ -62,7 +61,6 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<ActionResult<IEnumerable<TicketDto>>> List([FromQuery] int top = 10, CancellationToken ct = default)
     {
         top = Math.Clamp(top, 1, 100);
@@ -72,7 +70,6 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPatch("{id}/status")]
-    [Authorize]
     public async Task<ActionResult<TicketDto>> UpdateStatus(string id, UpdateTicketStatusRequest request, [FromHeader(Name = "If-Match")] string? etag, CancellationToken ct = default)
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
@@ -83,7 +80,6 @@ public class TicketsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize]
     public async Task<IActionResult> Delete(string id, [FromHeader(Name = "If-Match")] string? etag, CancellationToken ct = default)
     {
         var (userId, _) = GetUserIdentity();

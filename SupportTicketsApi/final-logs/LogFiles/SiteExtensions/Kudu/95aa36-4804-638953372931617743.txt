@@ -1,0 +1,22 @@
+2025-10-06T08:48:10  PID[4804] Information Unpacking resources...
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Executing Application Insights Profiler agent version 2.6.2201.2106 with arguments: 
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Minimum version enabled on machine: 1.0.0
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Applying logging level: Information
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Instrumentation key: 2407f879-1873-4730-9bb8-6658ece2aa0e
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Application Insights Profiler endpoint: https://profiler.monitor.azure.com/
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Application Insights endpoint: https://germanywestcentral-1.in.applicationinsights.azure.com/v2/track/
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Runtime Environment: Antares
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Support files: C:\local\Temp\jobs\continuous\ApplicationInsightsProfiler3\brlcmipe.n10\spsupport
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Providing usage data (to opt out set the AppSettings ApplicationInsightsProvideUsageTelemetryData with the value "false"): True
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:09 Information: Engine mode: Sampling
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:10 Information: Application Insights AppId: 7f527c07-f75d-40df-8b0f-ea125b5aa301
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:10 Information: Press 'Ctrl+C' to exit Application Insights Profiler.
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:10 Information: Set up shutdown handler.
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:10 Information: Shutdown handler set to watch C:\local\Temp\JobsShutdown\continuous\ApplicationInsightsProfiler3\lbhasoa0.2pc.
+2025-10-06T08:48:10  PID[4804] Information 10-06 08:48:10 Information: Starting main process
+2025-10-06T08:48:11  PID[4804] Information 10-06 08:48:11 Critical: Settings have been set from Engine
+2025-10-06T08:48:12  PID[4804] Information 10-06 08:48:12 Critical: Settings contract has been updated
+2025-10-06T08:48:12  PID[4804] Information 10-06 08:48:12 Critical: Enabled has been set to True
+2025-10-06T08:58:01  PID[4804] Verbose     SnapshotHelper::TakeSnapshotTimerCallback
+2025-10-06T08:58:01  PID[4804] Verbose     SnapshotHelper::TakeSnapshotInternal - no new files in CodeGen
+2025-10-06T09:11:00  PID[4804] Information 10-06 09:11:00 Information: Received shutdown request.

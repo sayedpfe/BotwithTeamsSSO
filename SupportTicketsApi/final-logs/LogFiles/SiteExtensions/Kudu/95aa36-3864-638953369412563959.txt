@@ -1,0 +1,1 @@
+2025-10-06T08:42:20  PID[3864] Information 10-06 08:42:20 Information: Received shutdown request.

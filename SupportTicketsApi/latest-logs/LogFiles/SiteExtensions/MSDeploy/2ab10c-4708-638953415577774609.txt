@@ -1,0 +1,15 @@
+2025-10-06T09:59:16  PID[4708] Verbose     SnapshotHelper::RestoreSnapshotInternal SUCCESS - File.Copy
+2025-10-06T09:59:16  PID[4708] Verbose     SnapshotHelper::RestoreSnapshotInternal SUCCESS - process
+2025-10-06T09:59:25  PID[4708] Information VSProjectId: 588c57bd-6678-444e-98cf-70b731e4d208
+2025-10-06T09:59:25  PID[4708] Information DeploymentComplete
+2025-10-06T10:05:32  PID[4708] Information VSProjectId: 588c57bd-6678-444e-98cf-70b731e4d208
+2025-10-06T10:05:32  PID[4708] Information DeploymentComplete
+2025-10-06T10:09:16  PID[4708] Verbose     SnapshotHelper::TakeSnapshotTimerCallback
+2025-10-06T10:09:16  PID[4708] Verbose     SnapshotHelper::TakeSnapshotInternal - no new files in CodeGen
+2025-10-06T10:10:02  PID[4708] Information VSProjectId: 588c57bd-6678-444e-98cf-70b731e4d208
+2025-10-06T10:10:02  PID[4708] Information DeploymentComplete
+2025-10-06T10:29:16  PID[4708] Verbose     SnapshotHelper::TakeSnapshotTimerCallback
+2025-10-06T10:29:16  PID[4708] Verbose     SnapshotHelper::TakeSnapshotInternal - no new files in CodeGen
+2025-10-06T10:29:16  PID[4708] Verbose     SnapshotHelper::TakeSnapshot time since last: 00:20:00.0321028
+2025-10-06T10:29:59  PID[4708] Information VSProjectId: 588c57bd-6678-444e-98cf-70b731e4d208
+2025-10-06T10:29:59  PID[4708] Information DeploymentComplete

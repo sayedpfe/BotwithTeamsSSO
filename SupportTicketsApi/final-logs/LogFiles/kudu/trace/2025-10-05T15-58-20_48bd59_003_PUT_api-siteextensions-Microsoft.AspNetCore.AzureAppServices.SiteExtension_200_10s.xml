@@ -1,0 +1,15 @@
+<step title="Incoming Request" date="2025-10-05T15:58:20.089" instance="48bd59" url="/api/siteextensions/Microsoft.AspNetCore.AzureAppServices.SiteExtension" method="PUT" type="request" pid="5428,2,13" Content-Length="0" Content-Type="application/json; charset=utf-8" Content-Encoding="utf-8" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="saaliticketsapi.scm.azurewebsites.net" User-Agent="Visual-Studio/17.14.16+36518.9 WebToolsExtension/17.14.122.59099" X-ARR-LOG-ID="560db437-7195-4473-9721-315e913b594a" CLIENT-IP="45.86.89.182:60998" X-SITE-DEPLOYMENT-ID="SaaliTicketsApi" WAS-DEFAULT-HOSTNAME="saaliticketsapi.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/siteextensions/Microsoft.AspNetCore.AzureAppServices.SiteExtension" >
+  <step title="Cleanup Xml Logs" date="2025-10-05T15:58:20.105" /><!-- duration: 16ms -->
+  <step title="Installing Microsoft.AspNetCore.AzureAppServices.SiteExtension, version:  from feed: , packageUri: " date="2025-10-05T15:58:21.457" /><!-- duration: 0ms -->
+  <step title="Installing &apos;Microsoft.AspNetCore.AzureAppServices.SiteExtension&apos; version &apos;&apos; from &apos;&apos;" date="2025-10-05T15:58:21.941" >
+    <step title="Site Extension Microsoft.AspNetCore.AzureAppServices.SiteExtension remote version is 10.0.0-rc-1-25451-107" date="2025-10-05T15:58:25.461" /><!-- duration: 16ms -->
+    <step title="FeedExtensionsV2 search package by id: Microsoft.AspNetCore.AzureAppServices.SiteExtension and version: ." date="2025-10-05T15:58:25.493" /><!-- duration: 0ms -->
+    <step title="Install package: Microsoft.AspNetCore.AzureAppServices.SiteExtension." date="2025-10-05T15:58:25.508" >
+      <step title="Download site extension: Microsoft.AspNetCore.AzureAppServices.SiteExtension" date="2025-10-05T15:58:25.524" /><!-- duration: 4120ms -->
+      <step title="Check if applicationHost.xdt or scmApplicationHost.xdt file existed." date="2025-10-05T15:58:29.644" /><!-- duration: 0ms -->
+      <step title="Trigger site extension job" date="2025-10-05T15:58:29.660" /><!-- duration: 0ms -->
+    </step><!-- duration: 4357ms -->
+    <step title="Update arm settings for Microsoft.AspNetCore.AzureAppServices.SiteExtension installation. Status: OK" date="2025-10-05T15:58:30.037" /><!-- duration: 156ms -->
+  </step><!-- duration: 8267ms -->
+  <step title="Outgoing response" date="2025-10-05T15:58:30.526" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="560db437-7195-4473-9721-315e913b594a" Cache-Control="private" X-AspNet-Version="4.0.30319" Content-Type="application/json; charset=utf-8" /><!-- duration: 0ms -->
+</step><!-- duration: 10448ms -->

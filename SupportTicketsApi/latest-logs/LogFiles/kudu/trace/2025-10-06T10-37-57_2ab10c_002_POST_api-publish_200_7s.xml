@@ -1,0 +1,126 @@
+<step title="Incoming Request" date="2025-10-06T10:37:57.473" instance="2ab10c" url="/api/publish?type=zip" method="POST" type="request" pid="8488,2,19" Cache-Control="no-cache" Content-Length="5691338" Content-Type="application/octet-stream" Accept="*/*" Accept-Encoding="gzip, deflate" Authorization="Bea..." Host="saaliticketsapi.scm.azurewebsites.net" User-Agent="AZURECLI/2.65.0 (MSI)" x-ms-client-request-id="8478c0d0-a2a0-11f0-9b80-f8e43b758159" X-ARR-LOG-ID="8478c0d0-a2a0-11f0-9b80-f8e43b758159" CLIENT-IP="45.86.89.182:60405" X-SITE-DEPLOYMENT-ID="SaaliTicketsApi" WAS-DEFAULT-HOSTNAME="saaliticketsapi.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip" >
+  <step title="Cleanup Xml Logs" date="2025-10-06T10:37:57.489" /><!-- duration: 0ms -->
+  <step title="OneDeploy" date="2025-10-06T10:37:58.755" >
+    <step title="Starting PushDeployAsync" date="2025-10-06T10:37:58.802" /><!-- duration: 0ms -->
+    <step title="Updating shutdown sentinel last write time" date="2025-10-06T10:37:59.020" SemaphoreCount="7" /><!-- duration: 0ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2025-10-06T10:37:59.036" /><!-- duration: 0ms -->
+    <step title="Saving request content to C:\local\Temp\zipdeploy\lyhxpumz.zip" date="2025-10-06T10:37:59.052" >
+      <step title="Total 5,691,338 bytes written to C:\local\Temp\zipdeploy\lyhxpumz.zip" date="2025-10-06T10:37:59.239" /><!-- duration: 16ms -->
+    </step><!-- duration: 203ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2025-10-06T10:37:59.255" /><!-- duration: 0ms -->
+    <step title="Deleting shutdown sentinel file" date="2025-10-06T10:37:59.270" SemaphoreCount="8" /><!-- duration: 0ms -->
+    <step title="Starting FetchDeploy" date="2025-10-06T10:37:59.286" /><!-- duration: 0ms -->
+    <step title="Attempting to fetch target branch HEAD" date="2025-10-06T10:37:59.302" /><!-- duration: 0ms -->
+    <step title="Updating shutdown sentinel last write time" date="2025-10-06T10:37:59.317" SemaphoreCount="7" /><!-- duration: 0ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2025-10-06T10:37:59.317" /><!-- duration: 0ms -->
+    <step title="Performing fetch based deployment" date="2025-10-06T10:37:59.364" >
+      <step title="Creating temporary deployment" date="2025-10-06T10:37:59.380" /><!-- duration: 109ms -->
+      <step title="Fetching changes." date="2025-10-06T10:37:59.614" /><!-- duration: 0ms -->
+      <step title="Starting LocalZipHandler" date="2025-10-06T10:37:59.630" /><!-- duration: 0ms -->
+      <step title="Starting LocalZipFetch" date="2025-10-06T10:37:59.645" /><!-- duration: 0ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\lyhxpumz.zip (5.43 MB) to C:\local\Temp\zipdeploy\extracted" date="2025-10-06T10:37:59.661" /><!-- duration: 0ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\lyhxpumz.zip (5.43 MB) to C:\local\Temp\zipdeploy\extracted" date="2025-10-06T10:37:59.661" >
+        <step title="Extracting 49 entries to C:\local\Temp\zipdeploy\extracted directory" date="2025-10-06T10:37:59.755" >
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\App_Data\tickets.json ..." date="2025-10-06T10:37:59.773" /><!-- duration: 59ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\runtimes\win\lib\netstandard2.0\System.Security.Cryptography.ProtectedData.dll ..." date="2025-10-06T10:37:59.864" /><!-- duration: 20ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\appsettings.Development.json ..." date="2025-10-06T10:37:59.884" /><!-- duration: 11ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\appsettings.json ..." date="2025-10-06T10:37:59.895" /><!-- duration: 0ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Azure.Core.dll ..." date="2025-10-06T10:37:59.895" /><!-- duration: 17ms -->
+          <step title="Omitting extracting file traces ..." date="2025-10-06T10:37:59.913" /><!-- duration: 30ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\System.Memory.Data.dll ..." date="2025-10-06T10:38:00.598" /><!-- duration: 0ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\System.Security.Cryptography.ProtectedData.dll ..." date="2025-10-06T10:38:00.614" /><!-- duration: 31ms -->
+          <step title="Extracting to C:\local\Temp\zipdeploy\extracted\web.config ..." date="2025-10-06T10:38:00.645" /><!-- duration: 0ms -->
+        </step><!-- duration: 891ms -->
+      </step><!-- duration: 984ms -->
+      <step title="None repository commit" date="2025-10-06T10:38:00.661" >
+        <step title="Commit id: 99409b8a657843b9b83233ee44aaba20" date="2025-10-06T10:38:00.661" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 0ms -->
+      </step><!-- duration: 0ms -->
+      <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2025-10-06T10:38:00.661" /><!-- duration: 16ms -->
+      <step title="DeploymentManager.Deploy(id:99409b8a657843b9b83233ee44aaba20)" date="2025-10-06T10:38:00.692" >
+        <step title="Collecting changeset information" date="2025-10-06T10:38:00.692" /><!-- duration: 31ms -->
+        <step title="Updating submodules" date="2025-10-06T10:38:00.723" >
+          <step title="Updating submodules." date="2025-10-06T10:38:00.786" /><!-- duration: 0ms -->
+        </step><!-- duration: 78ms -->
+        <step title="Preparing deployment for commit id &apos;99409b8a65&apos;." date="2025-10-06T10:38:00.848" /><!-- duration: 0ms -->
+        <step title="Determining deployment builder" date="2025-10-06T10:38:00.880" >
+          <step title="Builder is OneDeployBuilder" date="2025-10-06T10:38:00.895" /><!-- duration: 16ms -->
+        </step><!-- duration: 31ms -->
+        <step title="Copying SSH keys" date="2025-10-06T10:38:00.942" /><!-- duration: 0ms -->
+        <step title="Building" date="2025-10-06T10:38:00.942" >
+          <step title="Running build. Project type: OneDeploy" date="2025-10-06T10:38:01.020" /><!-- duration: 0ms -->
+          <step title="Copying the manifest" date="2025-10-06T10:38:01.052" /><!-- duration: 0ms -->
+          <step title="Clean deploying to C:\home\site\wwwroot" date="2025-10-06T10:38:01.098" /><!-- duration: 0ms -->
+          <step title="Generating deployment script." date="2025-10-06T10:38:01.145" /><!-- duration: 16ms -->
+          <step title="Generating deployment script" date="2025-10-06T10:38:01.161" >
+            <step title="Using the following command to generate deployment script: &apos;azure site deploymentscript -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;." date="2025-10-06T10:38:01.208" /><!-- duration: 0ms -->
+            <step title="Executing external process" date="2025-10-06T10:38:01.223" type="process" path="starter.cmd" arguments="&quot;C:\Program Files (x86)\SiteExtensions\Kudu\2025.09.1.1\bin\node_modules\.bin\kuduscript.cmd&quot; -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" >
+              <step title="C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\FileSystemHelper.js:63" date="2025-10-06T10:38:02.333" /><!-- duration: 0ms -->
+              <step title="exports.statAsync = util_1.promisify(fs.stat);" date="2025-10-06T10:38:02.348" /><!-- duration: 16ms -->
+              <step title="                           ^" date="2025-10-06T10:38:02.380" /><!-- duration: 0ms -->
+              <step title="TypeError: util_1.promisify is not a function" date="2025-10-06T10:38:02.411" /><!-- duration: 0ms -->
+              <step title="    at Object.&lt;anonymous&gt; (C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\FileSystemHelper.js:63:28)" date="2025-10-06T10:38:02.411" /><!-- duration: 16ms -->
+              <step title="    at Module._compile (module.js:577:32)" date="2025-10-06T10:38:02.427" /><!-- duration: 0ms -->
+              <step title="    at Object.Module._extensions..js (module.js:586:10)" date="2025-10-06T10:38:02.458" /><!-- duration: 0ms -->
+              <step title="    at Module.load (module.js:494:32)" date="2025-10-06T10:38:02.474" /><!-- duration: 0ms -->
+              <step title="    at tryModuleLoad (module.js:453:12)" date="2025-10-06T10:38:02.489" /><!-- duration: 0ms -->
+              <step title="    at Function.Module._load (module.js:445:3)" date="2025-10-06T10:38:02.489" /><!-- duration: 16ms -->
+              <step title="    at Module.require (module.js:504:17)" date="2025-10-06T10:38:02.505" /><!-- duration: 15ms -->
+              <step title="    at require (internal/module.js:20:19)" date="2025-10-06T10:38:02.536" /><!-- duration: 0ms -->
+              <step title="    at Object.&lt;anonymous&gt; (C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\InternalAzureLogger.js:48:24)" date="2025-10-06T10:38:02.536" /><!-- duration: 0ms -->
+              <step title="    at Module._compile (module.js:577:32)" date="2025-10-06T10:38:02.552" /><!-- duration: 0ms -->
+              <step title="Process dump" date="2025-10-06T10:38:02.552" exitCode="1" type="processOutput" /><!-- duration: 0ms -->
+            </step><!-- duration: 1328ms -->
+            <step title="C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\FileSystemHelper.js:63
+exports.statAsync = util_1.promisify(fs.stat);
+                           ^
+
+TypeError: util_1.promisify is not a function
+    at Object.&lt;anonymous&gt; (C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\FileSystemHelper.js:63:28)
+    at Module._compile (module.js:577:32)
+    at Object.Module._extensions..js (module.js:586:10)
+    at Module.load (module.js:494:32)
+    at tryModuleLoad (module.js:453:12)
+    at Function.Module._load (module.js:445:3)
+    at Module.require (module.js:504:17)
+    at require (internal/module.js:20:19)
+    at Object.&lt;anonymous&gt; (C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\InternalAzureLogger.js:48:24)
+    at Module._compile (module.js:577:32)
+C:\Program Files (x86)\SiteExtensions\Kudu\2025.09.1.1\bin\Scripts\starter.cmd &quot;C:\Program Files (x86)\SiteExtensions\Kudu\2025.09.1.1\bin\node_modules\.bin\kuduscript.cmd&quot; -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot; DEPLOYMENTINFO: deploymentPath = OneDeploy, deployer = OneDeploy, os = windows, sku = Basic, siteName = SaaliTicketsApi, siteHostName = saaliticketsapi.azurewebsites.net, deploymentStatus = Error" date="2025-10-06T10:38:02.567" /><!-- duration: 16ms -->
+          </step><!-- duration: 1421ms -->
+          <step title="Error occurred" date="2025-10-06T10:38:02.583" type="error" text="C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\FileSystemHelper.js:63
+exports.statAsync = util_1.promisify(fs.stat);
+                           ^
+
+TypeError: util_1.promisify is not a function
+    at Object.&lt;anonymous&gt; (C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\FileSystemHelper.js:63:28)
+    at Module._compile (module.js:577:32)
+    at Object.Module._extensions..js (module.js:586:10)
+    at Module.load (module.js:494:32)
+    at tryModuleLoad (module.js:453:12)
+    at Function.Module._load (module.js:445:3)
+    at Module.require (module.js:504:17)
+    at require (internal/module.js:20:19)
+    at Object.&lt;anonymous&gt; (C:\PROGRA~2\SITEEX~1\NODEAP~1\211~1.4\nodejs\node_modules\applicationinsights\out\Library\InternalAzureLogger.js:48:24)
+    at Module._compile (module.js:577:32)
+C:\Program Files (x86)\SiteExtensions\Kudu\2025.09.1.1\bin\Scripts\starter.cmd &quot;C:\Program Files (x86)\SiteExtensions\Kudu\2025.09.1.1\bin\node_modules\.bin\kuduscript.cmd&quot; -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" stackTrace="   at Kudu.Core.Infrastructure.Executable.ExecuteInternal(ITracer tracer, Func`2 onWriteOutput, Func`2 onWriteError, Encoding encoding, String arguments, Object[] args)
+   at Kudu.Core.Infrastructure.Executable.ExecuteWithProgressWriter(ILogger logger, ITracer tracer, String arguments, Object[] args)
+   at Kudu.Core.Deployment.Generator.GeneratorSiteBuilder.GenerateScript(DeploymentContext context, ILogger buildLogger)" /><!-- duration: 0ms -->
+          <step title="Build completed succesfully." date="2025-10-06T10:38:02.614" /><!-- duration: 0ms -->
+          <step title="Running post deployment command(s)..." date="2025-10-06T10:38:02.661" /><!-- duration: 0ms -->
+          <step title="Requesting site restart" date="2025-10-06T10:38:02.723" /><!-- duration: 0ms -->
+          <step title="Requesting site restart" date="2025-10-06T10:38:02.723" /><!-- duration: 0ms -->
+          <step title="Requesting site restart. Attempt #1" date="2025-10-06T10:38:02.770" /><!-- duration: 0ms -->
+          <step title="Requesting site restart. Attempt #1" date="2025-10-06T10:38:02.786" /><!-- duration: 0ms -->
+          <step title="Successfully requested a restart. Attempt #1" date="2025-10-06T10:38:04.302" /><!-- duration: 0ms -->
+          <step title="Successfully requested a restart. Attempt #1" date="2025-10-06T10:38:04.317" /><!-- duration: 0ms -->
+          <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = OneDeploy, deployer = OneDeploy, os = windows, sku = Basic, siteName = SaaliTicketsApi, siteHostName = saaliticketsapi.azurewebsites.net, deploymentStatus = Success" date="2025-10-06T10:38:04.333" /><!-- duration: 16ms -->
+        </step><!-- duration: 3563ms -->
+      </step><!-- duration: 3828ms -->
+      <step title="Cleaning up temp files" date="2025-10-06T10:38:04.520" /><!-- duration: 16ms -->
+      <step title="Skip function trigger and logicapp sync because function is not enabled." date="2025-10-06T10:38:04.552" /><!-- duration: 0ms -->
+    </step><!-- duration: 5219ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2025-10-06T10:38:04.583" /><!-- duration: 16ms -->
+    <step title="Deleting shutdown sentinel file" date="2025-10-06T10:38:04.598" SemaphoreCount="8" /><!-- duration: 0ms -->
+  </step><!-- duration: 5844ms -->
+  <step title="Outgoing response" date="2025-10-06T10:38:04.677" type="response" statusCode="200" statusText="OK" Server="Microsoft-IIS/10.0" x-ms-request-id="8478c0d0-a2a0-11f0-9b80-f8e43b758159" Cache-Control="private" X-AspNet-Version="4.0.30319" /><!-- duration: 0ms -->
+</step><!-- duration: 7219ms -->

@@ -1,0 +1,27 @@
+2025-10-06T09:32:46  PID[2832] Information 10/6/2025 9:32:46 AM [[4.8]] [dw1ldwk00001N] DaasRunner.exe with version 4.8.40625.1 and ProcessId=2832 started
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] Checking DaaS bits and updating if required
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] [daasrunner.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasrunner.exe and C:\home\site\Jobs\Continuous\DaaS\DaasRunner.exe
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] [daasconsole.exe] Version in DaaS Installation path (4.8.40625.1) is lower or equal to the existing version 4.8.40625.1. Version Compare result = 0
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] Binary Comparing files C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] Binary Comparison succeeded: C:\Program Files (x86)\SiteExtensions\DaaS\4.8.40625.1\bin\daasconsole.exe and C:\home\data\DaaS\bin\DaasConsole.exe
+2025-10-06T09:32:47  PID[2832] Information 10/6/2025 9:32:47 AM [[4.8]] [dw1ldwk00001N] Done checking DaaS bits for any new updates
+2025-10-06T09:33:08  PID[2832] Error       10/6/2025 9:33:08 AM Encountered exception while updating storage account connection string Azure.RequestFailedException:Key based authentication is not permitted on this storage account.
+RequestId:9a0ad6aa-c002-0069-53a4-36b164000000
+Time:2025-10-06T09:33:08.3288244Z
+Status: 403 (Key based authentication is not permitted on this storage account.)
+ErrorCode: KeyBasedAuthenticationNotPermitted
+
+Content:
+{"odata.error":{"code":"KeyBasedAuthenticationNotPermitted","message":{"lang":"en-US","value":"Key based authentication is not permitted on this storage account.\nRequestId:9a0ad6aa-c002-0069-53a4-36b164000000\nTime:2025-10-06T09:33:08.3288244Z"}}}
+
+Headers:
+x-ms-request-id: 9a0ad6aa-c002-0069-53a4-36b164000000
+x-ms-error-code: REDACTED
+Content-Length: 248
+Content-Type: application/json
+Date: Mon, 06 Oct 2025 09:33:08 GMT
+Server: Microsoft-HTTPAPI/2.0
+     at Azure.Data.Tables.TableClient.CreateIfNotExists(CancellationToken cancellationToken)
+   at DaaS.Sessions.AzureStorageSessionManager.get_IsEnabled()

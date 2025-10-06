@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<entries>
+  <entry time="2025-10-05T15:57:34.9689997+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [35836b0a-89f5-4a9d-bcdf-f7028d006eaf] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T15:57:35.3954267+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T15:57:35.4065102+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T15:57:35.4065102+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [35836b0a-89f5-4a9d-bcdf-f7028d006eaf] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T16:01:07.6230215+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [4f97c97f-7967-4492-a088-57c9a4a578db] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T16:01:07.6230215+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T16:01:07.638593+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T16:01:07.638593+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [4f97c97f-7967-4492-a088-57c9a4a578db] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:03:29.482618+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [5e4c1eff-a0ce-4fac-97a4-0832ee0c4126] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:03:29.9845066+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:03:29.9982424+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:03:29.9982424+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [5e4c1eff-a0ce-4fac-97a4-0832ee0c4126] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:06:13.5825253+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [00c2a002-486e-4343-8c4f-de8fd3223970] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:06:13.5981526+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:06:13.5981526+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:06:13.5981526+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [00c2a002-486e-4343-8c4f-de8fd3223970] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:08:03.7156004+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [14def075-1df6-41c4-9781-bab951f5d89c] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:08:03.7468426+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:08:03.7468426+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:08:03.7468426+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [14def075-1df6-41c4-9781-bab951f5d89c] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:10:30.9817004+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [570d26cc-c80e-4c14-bddc-b8960da9b036] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:10:30.9940417+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:10:30.9940417+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:10:31.0118409+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [570d26cc-c80e-4c14-bddc-b8960da9b036] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:12:29.1867821+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [2162bfa7-abff-4bb5-8254-4a8323fdfc20] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:12:29.202419+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:12:29.202419+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:12:29.202419+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [2162bfa7-abff-4bb5-8254-4a8323fdfc20] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:13:38.5952266+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [a9453c03-a0c9-4cec-8f03-95f13a110977] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:13:38.6264901+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:13:38.6264901+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:13:38.6264901+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [a9453c03-a0c9-4cec-8f03-95f13a110977] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-05T17:21:17.6405549+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [c60d304c-4ebf-45cc-bb46-ded8310477b8] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-05T17:21:17.6569557+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-05T17:21:17.6569557+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-05T17:21:17.6569557+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [c60d304c-4ebf-45cc-bb46-ded8310477b8] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T06:54:13.8493163+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [a3024d18-2761-4230-a604-c7c7ed597f73] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T06:54:13.9743217+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T06:54:13.9743217+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T06:54:13.9743217+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [a3024d18-2761-4230-a604-c7c7ed597f73] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T08:05:09.8006883+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [667c8472-f9bc-4d6c-8486-218c27634004] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T08:05:09.8944422+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T08:05:09.8944422+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T08:05:09.8944422+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [667c8472-f9bc-4d6c-8486-218c27634004] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T09:32:53.0474934+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [be17bda6-bf62-40d1-8bb9-759a4388928f] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T09:32:53.4231284+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T09:32:53.4231284+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T09:32:53.4231284+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [be17bda6-bf62-40d1-8bb9-759a4388928f] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T09:43:01.038023+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [48965a59-3f23-4715-a9c2-9f4d1f9fe506] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T09:43:01.4442878+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T09:43:01.4442878+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T09:43:01.4599138+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [48965a59-3f23-4715-a9c2-9f4d1f9fe506] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T09:59:25.6553495+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [f8433ef9-ce6c-461a-a022-bf375d983fc8] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T09:59:26.0276118+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T09:59:26.0432395+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T09:59:26.0432395+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [f8433ef9-ce6c-461a-a022-bf375d983fc8] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T10:05:32.5571347+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [e23d2304-c8d4-48f7-9021-7c46f6bbcd47] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T10:05:32.5571347+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T10:05:32.5571347+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T10:05:32.5571347+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [e23d2304-c8d4-48f7-9021-7c46f6bbcd47] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T10:10:02.1571617+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [5ccc0a8b-4326-44ba-a843-4c0f95e95d35] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T10:10:02.1571617+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T10:10:02.1720789+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T10:10:02.1720789+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [5ccc0a8b-4326-44ba-a843-4c0f95e95d35] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T10:29:59.9971605+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [23e9fab9-e7d9-4875-b4ce-3426fc646f10] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T10:30:00.0127188+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T10:30:00.0127188+00:00" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T10:30:00.0127188+00:00" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [23e9fab9-e7d9-4875-b4ce-3426fc646f10] Post-deployment operations complete.</message>
+  </entry>
+  <entry time="2025-10-06T10:37:16.8146948Z" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [719bd29a-21db-46c7-8eb3-651d1aebd5d6] WebDeploy operation complete. Performing post-deployment operations.</message>
+  </entry>
+  <entry time="2025-10-06T10:37:17.3443578Z" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] Skip function trigger and logicapp sync because function is not enabled.</message>
+  </entry>
+  <entry time="2025-10-06T10:37:17.3443578Z" type="Message">
+    <message>[Verbose] [user: admin@M365CPI90282478.onmicrosoft.com] AutoSwap is not enabled</message>
+  </entry>
+  <entry time="2025-10-06T10:37:17.3443578Z" type="Message">
+    <message>[Information] [user: admin@M365CPI90282478.onmicrosoft.com] [719bd29a-21db-46c7-8eb3-651d1aebd5d6] Post-deployment operations complete.</message>
+  </entry>
+</entries>

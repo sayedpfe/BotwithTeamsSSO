@@ -1,0 +1,20 @@
+2025-10-06T10:36:01  PID[9176] Information Unpacking resources...
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Executing Application Insights Profiler agent version 2.6.2201.2106 with arguments: 
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Minimum version enabled on machine: 1.0.0
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Applying logging level: Information
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Instrumentation key: 2407f879-1873-4730-9bb8-6658ece2aa0e
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Application Insights Profiler endpoint: https://profiler.monitor.azure.com/
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Application Insights endpoint: https://germanywestcentral-1.in.applicationinsights.azure.com/v2/track/
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Runtime Environment: Antares
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Support files: C:\local\Temp\jobs\continuous\ApplicationInsightsProfiler3\nxnu4eha.pmx\spsupport
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Providing usage data (to opt out set the AppSettings ApplicationInsightsProvideUsageTelemetryData with the value "false"): True
+2025-10-06T10:36:01  PID[9176] Information 10-06 10:36:01 Information: Engine mode: Sampling
+2025-10-06T10:36:02  PID[9176] Information 10-06 10:36:02 Information: Application Insights AppId: 7f527c07-f75d-40df-8b0f-ea125b5aa301
+2025-10-06T10:36:02  PID[9176] Information 10-06 10:36:02 Information: Press 'Ctrl+C' to exit Application Insights Profiler.
+2025-10-06T10:36:02  PID[9176] Information 10-06 10:36:02 Information: Set up shutdown handler.
+2025-10-06T10:36:02  PID[9176] Information 10-06 10:36:02 Information: Shutdown handler set to watch C:\local\Temp\JobsShutdown\continuous\ApplicationInsightsProfiler3\g2be43tp.uiv.
+2025-10-06T10:36:02  PID[9176] Information 10-06 10:36:02 Information: Starting main process
+2025-10-06T10:36:03  PID[9176] Information 10-06 10:36:03 Critical: Settings have been set from Engine
+2025-10-06T10:36:04  PID[9176] Information 10-06 10:36:04 Critical: Settings contract has been updated
+2025-10-06T10:36:04  PID[9176] Information 10-06 10:36:04 Critical: Enabled has been set to True
+2025-10-06T10:36:48  PID[9176] Information 10-06 10:36:48 Information: Received shutdown request.

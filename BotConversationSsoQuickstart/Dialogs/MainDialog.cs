@@ -210,10 +210,29 @@ namespace Microsoft.BotBuilderSamples
 
         private async Task ExecuteCreateTicketAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
         {
-            // Note: apiToken is not used since API has AuthType: None
-            var ticket = await _ticketClient.CreateAsync("Sample Ticket", "Generated from bot command.", ct);
-            await step.Context.SendActivityAsync(ticket == null ? "Ticket creation failed." :
-                $"✅ Ticket created: {ticket.Id} ({ticket.Title}) by Test User", cancellationToken: ct);
+            // Get user information from Teams context
+            var user = step.Context.Activity.From;
+            var userName = user?.Name ?? "Unknown User";
+            var userEmail = user?.Properties?["aadObjectId"]?.ToString() ?? "unknown@email.com";
+            
+            // Get additional user info if available from Teams channel data
+            var teamsMember = step.Context.Activity.From;
+            if (!string.IsNullOrEmpty(teamsMember?.Name))
+            {
+                userName = teamsMember.Name;
+            }
+            
+            // Create ticket with real user information
+            var title = $"Support Request from {userName}";
+            var description = $"Support ticket created via Teams bot by {userName} ({userEmail}) at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC";
+            
+            var ticket = await _ticketClient.CreateAsync(title, description, ct);
+            await step.Context.SendActivityAsync(ticket == null ? "❌ Ticket creation failed." :
+                $"✅ **Ticket Created Successfully!**\n\n" +
+                $"🎫 **Ticket ID:** {ticket.Id}\n" +
+                $"📝 **Title:** {ticket.Title}\n" +
+                $"👤 **Created by:** {userName}\n" +
+                $"📊 **Status:** {ticket.Status}", cancellationToken: ct);
         }
 
         private async Task ExecuteListTicketsAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)

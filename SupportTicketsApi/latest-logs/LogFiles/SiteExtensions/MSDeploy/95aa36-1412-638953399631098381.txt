@@ -1,0 +1,4 @@
+2025-10-06T09:32:42  PID[1412] Verbose     SnapshotHelper::RestoreSnapshotInternal SUCCESS - File.Copy
+2025-10-06T09:32:42  PID[1412] Verbose     SnapshotHelper::RestoreSnapshotInternal SUCCESS - process
+2025-10-06T09:32:52  PID[1412] Information VSProjectId: 588c57bd-6678-444e-98cf-70b731e4d208
+2025-10-06T09:32:52  PID[1412] Information DeploymentComplete

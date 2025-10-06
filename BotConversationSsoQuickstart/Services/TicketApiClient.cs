@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -5,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Identity.Client;
 
 namespace Microsoft.BotBuilderSamples.Services
 {
@@ -12,6 +14,8 @@ namespace Microsoft.BotBuilderSamples.Services
     {
         private readonly HttpClient _http;
         private readonly string _base;
+        private readonly string _authType;
+        private readonly IConfidentialClientApplication _authApp;
 
         public record TicketDto(string Id, string Title, string Description, string Status);
         public record CreateTicketRequest(string Title, string Description);
@@ -21,12 +25,54 @@ namespace Microsoft.BotBuilderSamples.Services
             _http = http;
             _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/') 
                 ?? throw new System.InvalidOperationException("TicketApi:BaseUrl missing");
+            _authType = cfg["TicketApi:AuthType"] ?? "None";
+
+            // Configure authentication if needed
+            if (_authType == "AzureAD")
+            {
+                var appId = cfg["MicrosoftAppId"] ?? throw new System.InvalidOperationException("MicrosoftAppId missing for authenticated API");
+                var appSecret = cfg["MicrosoftAppPassword"] ?? throw new System.InvalidOperationException("MicrosoftAppPassword missing for authenticated API");
+                var tenantId = cfg["MicrosoftAppTenantId"] ?? throw new System.InvalidOperationException("MicrosoftAppTenantId missing for authenticated API");
+
+                _authApp = ConfidentialClientApplicationBuilder
+                    .Create(appId)
+                    .WithClientSecret(appSecret)
+                    .WithAuthority($"https://login.microsoftonline.com/{tenantId}/v2.0")
+                    .Build();
+            }
         }
 
-        public async Task<TicketDto?> CreateAsync(string title, string description, CancellationToken ct)
+        private async Task<string> GetAccessTokenAsync(CancellationToken ct)
+        {
+            if (_authType != "AzureAD" || _authApp == null)
+                return null; // No authentication needed
+
+            try
+            {
+                // Get token for the API using the working scope format (no api:// prefix)
+                var result = await _authApp.AcquireTokenForClient(new[] { "89155d3a-359d-4603-b821-0504395e331f/.default" })
+                    .ExecuteAsync();
+                return result.AccessToken;
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail - let the API call fail with 401
+                System.Console.WriteLine($"Failed to acquire token: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<TicketDto> CreateAsync(string title, string description, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
-            // No authentication required - API is configured with AuthType: None
+            
+            // Add authentication if configured
+            var token = await GetAccessTokenAsync(ct);
+            if (token != null)
+            {
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
             req.Content = JsonContent.Create(new CreateTicketRequest(title, description));
             var resp = await _http.SendAsync(req, ct);
             var body = await resp.Content.ReadAsStringAsync(ct);
@@ -38,10 +84,17 @@ namespace Microsoft.BotBuilderSamples.Services
             return JsonSerializer.Deserialize<TicketDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<TicketDto[]?> ListAsync(int top, CancellationToken ct)
+        public async Task<TicketDto[]> ListAsync(int top, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{_base}/api/tickets?top={top}");
-            // No authentication required - API is configured with AuthType: None
+            
+            // Add authentication if configured
+            var token = await GetAccessTokenAsync(ct);
+            if (token != null)
+            {
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
             var resp = await _http.SendAsync(req, ct);
             if (!resp.IsSuccessStatusCode) return null;
             var json = await resp.Content.ReadAsStringAsync(ct);

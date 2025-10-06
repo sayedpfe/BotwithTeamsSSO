@@ -1,0 +1,20 @@
+2025-10-06T09:32:46  PID[1412] Information Unpacking resources...
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Executing Application Insights Profiler agent version 2.6.2201.2106 with arguments: 
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Minimum version enabled on machine: 1.0.0
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Applying logging level: Information
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Instrumentation key: 2407f879-1873-4730-9bb8-6658ece2aa0e
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Application Insights Profiler endpoint: https://profiler.monitor.azure.com/
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Application Insights endpoint: https://germanywestcentral-1.in.applicationinsights.azure.com/v2/track/
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Runtime Environment: Antares
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Support files: C:\local\Temp\jobs\continuous\ApplicationInsightsProfiler3\4fkki4js.2q5\spsupport
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Providing usage data (to opt out set the AppSettings ApplicationInsightsProvideUsageTelemetryData with the value "false"): True
+2025-10-06T09:32:46  PID[1412] Information 10-06 09:32:46 Information: Engine mode: Sampling
+2025-10-06T09:32:47  PID[1412] Information 10-06 09:32:47 Information: Application Insights AppId: 7f527c07-f75d-40df-8b0f-ea125b5aa301
+2025-10-06T09:32:47  PID[1412] Information 10-06 09:32:47 Information: Press 'Ctrl+C' to exit Application Insights Profiler.
+2025-10-06T09:32:47  PID[1412] Information 10-06 09:32:47 Information: Set up shutdown handler.
+2025-10-06T09:32:47  PID[1412] Information 10-06 09:32:47 Information: Shutdown handler set to watch C:\local\Temp\JobsShutdown\continuous\ApplicationInsightsProfiler3\k105tasq.tv2.
+2025-10-06T09:32:47  PID[1412] Information 10-06 09:32:47 Information: Starting main process
+2025-10-06T09:32:48  PID[1412] Information 10-06 09:32:48 Critical: Settings have been set from Engine
+2025-10-06T09:32:49  PID[1412] Information 10-06 09:32:49 Critical: Settings contract has been updated
+2025-10-06T09:32:49  PID[1412] Information 10-06 09:32:49 Critical: Enabled has been set to True
+2025-10-06T09:33:43  PID[1412] Information 10-06 09:33:43 Information: Received shutdown request.

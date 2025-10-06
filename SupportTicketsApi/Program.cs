@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Identity.Web;
 using SupportTicketsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,64 +6,39 @@ var builder = WebApplication.CreateBuilder(args);
 // Keep default providers so Azure App Service diagnostics still work
 builder.Logging.AddConsole();
 
-var azureAd = builder.Configuration.GetSection("AzureAd");
-var instance = azureAd["Instance"];
-var tenantId = azureAd["TenantId"];
-var clientId = azureAd["ClientId"];
-var audience = azureAd["Audience"];
-
-// OPTION: If Azure AD config is missing, skip auth so the process can start (prevents silent 500.30).
-var aadConfigPresent = !string.IsNullOrWhiteSpace(instance)
-                       && !string.IsNullOrWhiteSpace(tenantId)
-                       && (!string.IsNullOrWhiteSpace(audience) || !string.IsNullOrWhiteSpace(clientId));
-
-if (aadConfigPresent)
-{
-    instance = instance!.TrimEnd('/');
-    var authority = $"{instance}/{tenantId}/v2.0";
-
-    builder.Services
-        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApi(options =>
+// Configure JWT Bearer authentication using bot app registration
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Use your bot's tenant and app registration
+        options.Authority = "https://login.microsoftonline.com/b22f8675-8375-455b-941a-67bee4cf7747/v2.0";
+        options.Audience = "89155d3a-359d-4603-b821-0504395e331f"; // Your bot's app ID
+        
+        options.TokenValidationParameters.ValidAudiences = new[]
         {
-            options.Authority = authority;
-            options.TokenValidationParameters.ValidAudiences = new[]
+            "89155d3a-359d-4603-b821-0504395e331f", // Your bot's app ID
+            "api://89155d3a-359d-4603-b821-0504395e331f" // Alternative format
+        };
+        
+        options.TokenValidationParameters.ValidIssuer = "https://sts.windows.net/b22f8675-8375-455b-941a-67bee4cf7747/";
+        
+        // Optional: Add logging for debugging
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
             {
-                audience,
-                clientId
-            };
-        },
-        configureMicrosoftIdentityOptions: null);
-}
-else
-{
-    var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("Startup");
-    logger.LogWarning("AzureAd config incomplete (Instance:{Instance} Tenant:{Tenant} Audience/ClientId missing). Authentication disabled.", instance, tenantId);
-
-    builder.Services
-        .AddAuthentication(o =>
-        {
-            o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(o =>
-        {
-            // Always fail auth so protected endpoints still reject, but app starts.
-            o.Events = new JwtBearerEvents
+                Console.WriteLine($"Authentication failed: {context.Exception}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
             {
-                OnMessageReceived = ctx =>
-                {
-                    ctx.NoResult();
-                    return Task.CompletedTask;
-                }
-            };
-        });
-}
+                Console.WriteLine($"Token validated for: {context.Principal?.Identity?.Name}");
+                return Task.CompletedTask;
+            }
+        };
+    });
 
-builder.Services.AddAuthorization(o =>
-{
-    o.AddPolicy("TicketsScope", p => p.RequireClaim("scp", "Tickets.ReadWrite"));
-});
+builder.Services.AddAuthorization();
 
 // File-backed repository only
 builder.Services.AddSingleton<ITicketRepository, FileTicketRepository>();

@@ -1,0 +1,20 @@
+2025-10-06T09:34:44  PID[6644] Information Unpacking resources...
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Executing Application Insights Profiler agent version 2.6.2201.2106 with arguments: 
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Minimum version enabled on machine: 1.0.0
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Applying logging level: Information
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Instrumentation key: 2407f879-1873-4730-9bb8-6658ece2aa0e
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Application Insights Profiler endpoint: https://profiler.monitor.azure.com/
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Application Insights endpoint: https://germanywestcentral-1.in.applicationinsights.azure.com/v2/track/
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Runtime Environment: Antares
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Support files: C:\local\Temp\jobs\continuous\ApplicationInsightsProfiler3\m3kjr5mq.flj\spsupport
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Providing usage data (to opt out set the AppSettings ApplicationInsightsProvideUsageTelemetryData with the value "false"): True
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:43 Information: Engine mode: Sampling
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:44 Information: Application Insights AppId: 7f527c07-f75d-40df-8b0f-ea125b5aa301
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:44 Information: Press 'Ctrl+C' to exit Application Insights Profiler.
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:44 Information: Set up shutdown handler.
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:44 Information: Shutdown handler set to watch C:\local\Temp\JobsShutdown\continuous\ApplicationInsightsProfiler3\wf21mfqo.qtn.
+2025-10-06T09:34:44  PID[6644] Information 10-06 09:34:44 Information: Starting main process
+2025-10-06T09:34:45  PID[6644] Information 10-06 09:34:45 Critical: Settings have been set from Engine
+2025-10-06T09:34:46  PID[6644] Information 10-06 09:34:46 Information: Received shutdown request.
+2025-10-06T09:34:46  PID[6644] Information 10-06 09:34:46 Critical: Settings contract has been updated
+2025-10-06T09:34:46  PID[6644] Information 10-06 09:34:46 Critical: Enabled has been set to True

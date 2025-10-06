@@ -1,0 +1,9 @@
+<step title="Incoming Request" date="2025-10-06T10:41:32.221" instance="2ab10c" url="/dump" method="GET" type="request" pid="8800,2,8" Connection="Keep-Alive" Accept-Encoding="identity" Authorization="Bea..." Host="saaliticketsapi.scm.azurewebsites.net" User-Agent="AZURECLI/2.65.0 (MSI)" x-ms-client-request-id="fe8205b5-a2a0-11f0-add0-f8e43b758159" X-ARR-LOG-ID="fe8205b5-a2a0-11f0-add0-f8e43b758159" CLIENT-IP="45.86.89.182:63204" X-SITE-DEPLOYMENT-ID="SaaliTicketsApi" WAS-DEFAULT-HOSTNAME="saaliticketsapi.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-MS-COLDSTART="1" >
+  <step title="ZipStreamContent.OnZip" date="2025-10-06T10:41:34.460" >
+    <step title="Error occurred" date="2025-10-06T10:41:34.800" type="error" text="C:\home\LogFiles\ApplicationInsights\status\status_DW0LDWK000015_3880_1.json, System.IO.IOException: The process cannot access the file &apos;C:\home\LogFiles\ApplicationInsights\status\status_DW0LDWK000015_3880_1.json&apos; because it is being used by another process.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, Boolean useAsync)
+   at System.IO.FileInfo.OpenRead()
+   at Kudu.Core.Infrastructure.ZipArchiveExtensions.AddFile(ZipArchive zipArchive, FileInfoBase file, ITracer tracer, String directoryNameInArchive)" /><!-- duration: 0ms -->
