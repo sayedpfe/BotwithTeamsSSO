@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Azure.Data.Tables;
+using Azure.Identity;
 using SupportTicketsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,11 +42,39 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// File-backed repository only
-builder.Services.AddSingleton<ITicketRepository, FileTicketRepository>();
+// Configure storage based on configuration
+var storageType = builder.Configuration["Storage:Type"] ?? "File";
+
+if (storageType.Equals("TableStorage", StringComparison.OrdinalIgnoreCase))
+{
+    // Azure Table Storage configuration with Azure AD authentication
+    var accountUrl = builder.Configuration["AzureTable:AccountUrl"] 
+                  ?? "https://sayedsupportticketsstg.table.core.windows.net";
+    
+    if (!string.IsNullOrEmpty(accountUrl))
+    {
+        // Use Azure AD authentication (DefaultAzureCredential)
+        builder.Services.AddSingleton(new TableServiceClient(new Uri(accountUrl), new Azure.Identity.DefaultAzureCredential()));
+        builder.Services.AddSingleton<ITicketRepository, TableStorageTicketRepository>();
+        Console.WriteLine("Using Azure Table Storage with Azure AD authentication for ticket repository");
+    }
+    else
+    {
+        // Fallback to file storage
+        builder.Services.AddSingleton<ITicketRepository, FileTicketRepository>();
+        Console.WriteLine("No Table Storage account URL found, falling back to File Storage");
+    }
+}
+else
+{
+    // Default to file storage
+    builder.Services.AddSingleton<ITicketRepository, FileTicketRepository>();
+    Console.WriteLine("Using File Storage for ticket repository");
+}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
