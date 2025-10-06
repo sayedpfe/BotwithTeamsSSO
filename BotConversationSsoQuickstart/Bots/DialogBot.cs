@@ -10,6 +10,8 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using Microsoft.BotBuilderSamples.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -19,15 +21,18 @@ namespace Microsoft.BotBuilderSamples
         protected readonly UserState _userState;
         protected readonly Dialog _dialog;
         protected readonly ILogger _logger;
+        private readonly TicketApiClient _ticketClient;
 
         public DialogBot(ConversationState conversationState,
                          UserState userState,
                          T dialog,
+                         TicketApiClient ticketClient,
                          ILogger<DialogBot<T>> logger)
         {
             _conversationState = conversationState;
             _userState = userState;
             _dialog = dialog;
+            _ticketClient = ticketClient;
             _logger = logger;
         }
 
@@ -64,12 +69,21 @@ namespace Microsoft.BotBuilderSamples
                     await BeginGraphActionAsync(turnContext, GraphAction.SendTestMail, cancellationToken);
                     return;
 
+                case "create ticket":
+                    await BeginGraphActionAsync(turnContext, GraphAction.CreateTicket, cancellationToken);
+                    return;
+
+                case "my tickets":
+                case "list tickets":
+                    await BeginGraphActionAsync(turnContext, GraphAction.ListTickets, cancellationToken);
+                    return;
+
                 case "logout":
                     await HandleLogoutAsync(turnContext, cancellationToken);
                     return;
 
                 default:
-                    await turnContext.SendActivityAsync("Unknown command. Type 'help' for available commands.", cancellationToken: cancellationToken);
+                    await turnContext.SendActivityAsync("Unknown command. Type 'help' for commands.", cancellationToken: cancellationToken);
                     return;
             }
         }
@@ -92,18 +106,16 @@ namespace Microsoft.BotBuilderSamples
         {
             if (turnContext.Adapter is IUserTokenProvider tokenProvider)
             {
-                var logoutDialog = _dialog as LogoutDialog;
-                var connectionName = logoutDialog?.GetType()
-                    .GetProperty("ConnectionName", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-                    ?.GetValue(logoutDialog) as string;
+                var cfg = turnContext.TurnState.Get<IConfiguration>();
+                var graphConn = cfg["ConnectionNameGraph"];
+                var ticketsConn = cfg["ConnectionNameTickets"];
 
-                if (!string.IsNullOrEmpty(connectionName))
-                {
-                    await tokenProvider.SignOutUserAsync(turnContext, connectionName, null, cancellationToken);
-                }
+                if (!string.IsNullOrEmpty(graphConn))
+                    await tokenProvider.SignOutUserAsync(turnContext, graphConn, null, cancellationToken);
+                if (!string.IsNullOrEmpty(ticketsConn))
+                    await tokenProvider.SignOutUserAsync(turnContext, ticketsConn, null, cancellationToken);
             }
-
-            await turnContext.SendActivityAsync("Signed out. Type 'profile' or 'recent mail' to sign in again.", cancellationToken: cancellationToken);
+            await turnContext.SendActivityAsync("Signed out of all connections.", cancellationToken: cancellationToken);
         }
 
         private static Task SendHelpAsync(ITurnContext turnContext, CancellationToken cancellationToken)
@@ -113,9 +125,21 @@ namespace Microsoft.BotBuilderSamples
                 " - profile\n" +
                 " - recent mail\n" +
                 " - send test mail\n" +
+                " - create ticket\n" +
+                " - my tickets\n" +
                 " - logout\n" +
                 " - help",
                 cancellationToken: cancellationToken);
+        }
+
+        private async Task<string?> GetCurrentApiTokenAsync(ITurnContext turnContext, CancellationToken ct)
+        {
+            if (turnContext.Adapter is IUserTokenProvider tp)
+            {
+                var token = await tp.GetUserTokenAsync(turnContext, "oauthbotsetting", null, ct);
+                return token?.Token;
+            }
+            return null;
         }
     }
 }

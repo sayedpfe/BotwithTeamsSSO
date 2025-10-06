@@ -31,6 +31,7 @@ builder.Services.AddSingleton<MainDialog>();
 
 // Bot
 builder.Services.AddTransient<IBot, TeamsBot<MainDialog>>();
+builder.Services.AddHttpClient<Microsoft.BotBuilderSamples.Services.TicketApiClient>();
 
 var app = builder.Build();
 

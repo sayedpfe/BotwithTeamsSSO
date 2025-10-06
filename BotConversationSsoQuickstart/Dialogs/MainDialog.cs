@@ -11,6 +11,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.BotBuilderSamples.Services;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -20,32 +21,59 @@ namespace Microsoft.BotBuilderSamples
     public class MainDialog : LogoutDialog
     {
         private readonly ILogger _logger;
-        private const string TokenValueKey = "graphToken";
+        private readonly TicketApiClient _ticketClient;
+        private readonly string _graphConnection;
+        private readonly string _ticketsConnection;
+
+        // Store tokens per connection name inside dialog values
+        private const string TokensKey = "tokens";
+        private const string ActionKey = "action";
+
+        private const string GraphPromptId = "GraphOAuthPrompt";
+        private const string TicketsPromptId = "TicketsOAuthPrompt";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
         /// </summary>
         /// <param name="configuration">The configuration.</param>
+        /// <param name="ticketClient">The ticket client.</param>
         /// <param name="logger">The logger.</param>
-        public MainDialog(IConfiguration configuration, ILogger<MainDialog> logger)
-            : base(nameof(MainDialog), configuration["ConnectionName"])
+        public MainDialog(IConfiguration config,
+                          TicketApiClient ticketClient,
+                          ILogger<MainDialog> logger)
+            // base(...) still wants a "primary" connection name (we use graph one)
+            : base(nameof(MainDialog), config["ConnectionNameGraph"])
         {
             _logger = logger;
+            _ticketClient = ticketClient;
+            _graphConnection = config["ConnectionNameGraph"] ?? throw new InvalidOperationException("ConnectionNameGraph missing");
+            _ticketsConnection = config["ConnectionNameTickets"] ?? throw new InvalidOperationException("ConnectionNameTickets missing");
 
+            // Graph prompt
             AddDialog(new OAuthPrompt(
-                nameof(OAuthPrompt),
+                GraphPromptId,
                 new OAuthPromptSettings
                 {
-                    ConnectionName = ConnectionName,
-                    Title = "Sign In",
-                    Text = "Please sign in to continue.",
-                    Timeout = 300000,
-                    EndOnInvalidMessage = true
+                    ConnectionName = _graphConnection,
+                    Title = "Sign in (Graph)",
+                    Text = "Please sign in to access Microsoft Graph resources.",
+                    Timeout = 300000
+                }));
+
+            // Tickets prompt
+            AddDialog(new OAuthPrompt(
+                TicketsPromptId,
+                new OAuthPromptSettings
+                {
+                    ConnectionName = _ticketsConnection,
+                    Title = "Sign in (Tickets)",
+                    Text = "Please sign in to access Support Tickets.",
+                    Timeout = 300000
                 }));
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
-                EnsureTokenStepAsync,
+                EnsureResourceTokenStepAsync,
                 ExecuteActionStepAsync
             }));
 
@@ -53,126 +81,143 @@ namespace Microsoft.BotBuilderSamples
             InitialDialogId = nameof(WaterfallDialog);
         }
 
-        // Step 1: Obtain token silently; if not present, start OAuthPrompt
-        private async Task<DialogTurnResult> EnsureTokenStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var options = stepContext.Options as GraphActionOptions ?? new GraphActionOptions { Action = GraphAction.None };
-            stepContext.Values["action"] = options.Action;
+        private bool IsGraphAction(GraphAction action) =>
+            action == GraphAction.Profile ||
+            action == GraphAction.RecentMail ||
+            action == GraphAction.SendTestMail;
 
-            if (options.Action == GraphAction.None)
+        private bool IsTicketsAction(GraphAction action) =>
+            action == GraphAction.CreateTicket ||
+            action == GraphAction.ListTickets;
+
+        // Step 1: Obtain token silently; if not present, start OAuthPrompt
+        private async Task<DialogTurnResult> EnsureResourceTokenStepAsync(WaterfallStepContext step,
+            CancellationToken ct)
+        {
+            var opts = step.Options as GraphActionOptions ?? new GraphActionOptions { Action = GraphAction.None };
+            if (opts.Action == GraphAction.None)
             {
-                await stepContext.Context.SendActivityAsync("No actionable command supplied.", cancellationToken: cancellationToken);
-                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync("No action specified.", cancellationToken: ct);
+                return await step.EndDialogAsync(cancellationToken: ct);
             }
 
-            if (stepContext.Context.Adapter is IUserTokenProvider tokenProvider)
+            step.Values[ActionKey] = opts.Action;
+
+            // Prepare tokens dictionary
+            if (!step.Values.ContainsKey(TokensKey))
+                step.Values[TokensKey] = new Dictionary<string, string>();
+
+            var tokens = (Dictionary<string, string>)step.Values[TokensKey];
+
+            string connection;
+            string promptId;
+            if (IsGraphAction(opts.Action))
             {
-                var silent = await tokenProvider.GetUserTokenAsync(stepContext.Context, ConnectionName, null, cancellationToken);
+                connection = _graphConnection;
+                promptId = GraphPromptId;
+            }
+            else if (IsTicketsAction(opts.Action))
+            {
+                connection = _ticketsConnection;
+                promptId = TicketsPromptId;
+            }
+            else
+            {
+                await step.Context.SendActivityAsync("Unsupported action.", cancellationToken: ct);
+                return await step.EndDialogAsync(cancellationToken: ct);
+            }
+
+            // Silent attempt
+            if (step.Context.Adapter is IUserTokenProvider tp)
+            {
+                var silent = await tp.GetUserTokenAsync(step.Context, connection, null, ct);
                 if (silent != null && !string.IsNullOrEmpty(silent.Token))
                 {
-                    stepContext.Values[TokenValueKey] = silent.Token;
-                    return await stepContext.NextAsync(null, cancellationToken);
+                    tokens[connection] = silent.Token;
+                    return await step.NextAsync(null, ct);
                 }
             }
 
-            // Need interactive login
-            return await stepContext.BeginDialogAsync(nameof(OAuthPrompt), cancellationToken: cancellationToken);
+            // Begin the correct OAuth prompt
+            return await step.BeginDialogAsync(promptId, cancellationToken: ct);
         }
 
         // Step 2: Execute the action using the token
-        private async Task<DialogTurnResult> ExecuteActionStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ExecuteActionStepAsync(WaterfallStepContext step,
+            CancellationToken ct)
         {
-            // If we came from OAuthPrompt, capture token
-            if (!stepContext.Values.ContainsKey(TokenValueKey))
+            var action = (GraphAction)step.Values[ActionKey];
+            var tokens = (Dictionary<string, string>)step.Values[TokensKey];
+
+            string connectionNeeded = IsGraphAction(action) ? _graphConnection : _ticketsConnection;
+
+            // If came from prompt, capture token
+            if (!tokens.ContainsKey(connectionNeeded))
             {
-                if (stepContext.Result is TokenResponse tokenResponse && !string.IsNullOrEmpty(tokenResponse.Token))
+                if (step.Result is TokenResponse tokenResponse && !string.IsNullOrEmpty(tokenResponse.Token))
                 {
-                    stepContext.Values[TokenValueKey] = tokenResponse.Token;
+                    tokens[connectionNeeded] = tokenResponse.Token;
                 }
             }
 
-            if (!stepContext.Values.TryGetValue(TokenValueKey, out var tokenObj) || string.IsNullOrEmpty(tokenObj as string))
+            if (!tokens.TryGetValue(connectionNeeded, out var tokenValue))
             {
-                await stepContext.Context.SendActivityAsync("Authentication required but not completed.", cancellationToken: cancellationToken);
-                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync("Authentication failed or was cancelled.", cancellationToken: ct);
+                return await step.EndDialogAsync(cancellationToken: ct);
             }
-
-            var token = (string)tokenObj;
-            var action = (GraphAction)stepContext.Values["action"];
-            var client = new SimpleGraphClient(token);
 
             try
             {
                 switch (action)
                 {
                     case GraphAction.Profile:
-                        await ExecuteProfileAsync(stepContext, client, cancellationToken);
+                        await step.Context.SendActivityAsync("Graph action placeholder (implement OBO or separate Graph connection usage).", cancellationToken: ct);
                         break;
                     case GraphAction.RecentMail:
-                        await ExecuteRecentMailAsync(stepContext, client, cancellationToken);
+                        await step.Context.SendActivityAsync("Recent mail not implemented with separate token yet.", cancellationToken: ct);
                         break;
                     case GraphAction.SendTestMail:
-                        await ExecuteSendTestMailAsync(stepContext, client, cancellationToken);
+                        await step.Context.SendActivityAsync("Send mail not implemented in dual-connection sample.", cancellationToken: ct);
+                        break;
+                    case GraphAction.CreateTicket:
+                        await ExecuteCreateTicketAsync(step, tokenValue, ct);
+                        break;
+                    case GraphAction.ListTickets:
+                        await ExecuteListTicketsAsync(step, tokenValue, ct);
                         break;
                     default:
-                        await stepContext.Context.SendActivityAsync("Unknown action.", cancellationToken: cancellationToken);
+                        await step.Context.SendActivityAsync("Unknown action.", cancellationToken: ct);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Graph action failed.");
-                await stepContext.Context.SendActivityAsync("An error occurred performing the requested action.", cancellationToken: cancellationToken);
+                _logger.LogError(ex, "Error executing action {Action}", action);
+                await step.Context.SendActivityAsync("An error occurred executing the action.", cancellationToken: ct);
             }
 
-            return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+            return await step.EndDialogAsync(cancellationToken: ct);
         }
 
-        private static async Task ExecuteProfileAsync(WaterfallStepContext stepContext, SimpleGraphClient client, CancellationToken cancellationToken)
+        private async Task ExecuteCreateTicketAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
         {
-            var me = await client.GetMeAsync();
-            var title = string.IsNullOrEmpty(me.JobTitle) ? "Unknown" : me.JobTitle;
-            await stepContext.Context.SendActivityAsync(
-                $"Profile: {me.DisplayName} ({me.UserPrincipalName}) | Title: {title}",
-                cancellationToken: cancellationToken);
-
-            var photo = await client.GetPhotoAsync();
-            if (!string.IsNullOrEmpty(photo))
-            {
-                var card = new ThumbnailCard(images: new List<CardImage> { new CardImage(photo) });
-                await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(card.ToAttachment()), cancellationToken);
-            }
-            else
-            {
-                await stepContext.Context.SendActivityAsync("No profile photo found.", cancellationToken: cancellationToken);
-            }
+            var ticket = await _ticketClient.CreateAsync(apiToken, "Sample Ticket", "Generated from bot command.", ct);
+            await step.Context.SendActivityAsync(ticket == null ? "Ticket creation failed." :
+                $"Ticket created: {ticket.Id} ({ticket.Title})", cancellationToken: ct);
         }
 
-        private static async Task ExecuteRecentMailAsync(WaterfallStepContext stepContext, SimpleGraphClient client, CancellationToken cancellationToken)
+        private async Task ExecuteListTicketsAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
         {
-            var messages = await client.GetRecentMailAsync();
-            if (messages.Length == 0)
+            var list = await _ticketClient.ListAsync(apiToken, 5, ct);
+            if (list == null || list.Length == 0)
             {
-                await stepContext.Context.SendActivityAsync("No recent inbox messages.", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync("No tickets found.", cancellationToken: ct);
                 return;
             }
-
-            await stepContext.Context.SendActivityAsync("Recent mail:", cancellationToken: cancellationToken);
-            foreach (var m in messages)
+            foreach (var t in list)
             {
-                var from = m.From?.EmailAddress?.Address ?? "unknown";
-                var stamp = m.ReceivedDateTime?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "";
-                var status = m.IsRead == true ? "[Read]" : "[New]";
-                await stepContext.Context.SendActivityAsync($"{status} {stamp} | {m.Subject} | From: {from}", cancellationToken: cancellationToken);
+                await step.Context.SendActivityAsync($"[{t.Status}] {t.Title} ({t.Id})", cancellationToken: ct);
             }
-        }
-
-        private static async Task ExecuteSendTestMailAsync(WaterfallStepContext stepContext, SimpleGraphClient client, CancellationToken cancellationToken)
-        {
-            var me = await client.GetMeAsync();
-            var to = me.Mail ?? me.UserPrincipalName;
-            await client.SendMailAsync(to, "Test mail from Teams Bot", "This is a test message sent via Microsoft Graph.");
-            await stepContext.Context.SendActivityAsync($"Test mail sent to {to}.", cancellationToken: cancellationToken);
         }
     }
 }

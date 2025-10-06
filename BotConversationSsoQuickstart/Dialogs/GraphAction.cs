@@ -5,11 +5,14 @@ namespace Microsoft.BotBuilderSamples
         None = 0,
         Profile = 1,
         RecentMail = 2,
-        SendTestMail = 3
+        SendTestMail = 3,
+        CreateTicket = 4,
+        ListTickets = 5
     }
 
     public sealed class GraphActionOptions
     {
         public GraphAction Action { get; set; } = GraphAction.None;
+        public object? Payload { get; set; }
     }
 }

@@ -9,6 +9,8 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using Microsoft.BotBuilderSamples;
+using Microsoft.BotBuilderSamples.Services;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -24,10 +26,18 @@ namespace Microsoft.BotBuilderSamples
         /// <param name="conversationState">The conversation state.</param>
         /// <param name="userState">The user state.</param>
         /// <param name="dialog">The dialog.</param>
+        /// <param name="ticketApi">The ticket API.</param>
         /// <param name="logger">The logger.</param>
-        public TeamsBot(ConversationState conversationState, UserState userState, T dialog, ILogger<DialogBot<T>> logger)
-            : base(conversationState, userState, dialog, logger)
+        public TeamsBot(
+            ConversationState conversationState,
+            UserState userState,
+            T dialog,
+            TicketApiClient ticketApi,
+            ILogger<DialogBot<T>> logger)
+            : base(conversationState, userState, dialog, ticketApi, logger)
         {
+            // Store ticketApi if needed, e.g.:
+            // _ticketApi = ticketApi;
         }
 
         /// <summary>
