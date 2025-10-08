@@ -11,6 +11,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.BotBuilderSamples.Services;
 
 namespace Microsoft.BotBuilderSamples
@@ -31,20 +32,21 @@ namespace Microsoft.BotBuilderSamples
 
         private const string GraphPromptId = "GraphOAuthPrompt";
         private const string TicketsPromptId = "TicketsOAuthPrompt";
+        private const string CreateTicketDialogId = "CreateTicketDialog";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
         /// </summary>
         /// <param name="configuration">The configuration.</param>
         /// <param name="ticketClient">The ticket client.</param>
-        /// <param name="logger">The logger.</param>
+        /// <param name="loggerFactory">The logger factory.</param>
         public MainDialog(IConfiguration config,
                           TicketApiClient ticketClient,
-                          ILogger<MainDialog> logger)
+                          ILoggerFactory loggerFactory)
             // base(...) still wants a "primary" connection name (we use graph one)
             : base(nameof(MainDialog), config["ConnectionNameGraph"])
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger<MainDialog>();
             _ticketClient = ticketClient;
             _graphConnection = config["ConnectionNameGraph"] ?? throw new InvalidOperationException("ConnectionNameGraph missing");
             _ticketsConnection = config["ConnectionNameTickets"] ?? throw new InvalidOperationException("ConnectionNameTickets missing");
@@ -70,6 +72,9 @@ namespace Microsoft.BotBuilderSamples
                     Text = "Please sign in to access Support Tickets.",
                     Timeout = 300000
                 }));
+
+            // Add the create ticket dialog
+            AddDialog(new CreateTicketDialog(ticketClient, loggerFactory.CreateLogger<CreateTicketDialog>()));
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
@@ -189,8 +194,7 @@ namespace Microsoft.BotBuilderSamples
                         await ExecuteSendTestMailAsync(step, tokenValue, ct);
                         break;
                     case GraphAction.CreateTicket:
-                        await ExecuteCreateTicketAsync(step, tokenValue, ct);
-                        break;
+                        return await step.BeginDialogAsync(CreateTicketDialogId, cancellationToken: ct);
                     case GraphAction.ListTickets:
                         await ExecuteListTicketsAsync(step, tokenValue, ct);
                         break;
@@ -206,33 +210,6 @@ namespace Microsoft.BotBuilderSamples
             }
 
             return await step.EndDialogAsync(cancellationToken: ct);
-        }
-
-        private async Task ExecuteCreateTicketAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
-        {
-            // Get user information from Teams context
-            var user = step.Context.Activity.From;
-            var userName = user?.Name ?? "Unknown User";
-            var userEmail = user?.Properties?["aadObjectId"]?.ToString() ?? "unknown@email.com";
-            
-            // Get additional user info if available from Teams channel data
-            var teamsMember = step.Context.Activity.From;
-            if (!string.IsNullOrEmpty(teamsMember?.Name))
-            {
-                userName = teamsMember.Name;
-            }
-            
-            // Create ticket with real user information
-            var title = $"Support Request from {userName}";
-            var description = $"Support ticket created via Teams bot by {userName} ({userEmail}) at {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC";
-            
-            var ticket = await _ticketClient.CreateAsync(title, description, ct);
-            await step.Context.SendActivityAsync(ticket == null ? "❌ Ticket creation failed." :
-                $"✅ **Ticket Created Successfully!**\n\n" +
-                $"🎫 **Ticket ID:** {ticket.Id}\n" +
-                $"📝 **Title:** {ticket.Title}\n" +
-                $"👤 **Created by:** {userName}\n" +
-                $"📊 **Status:** {ticket.Status}", cancellationToken: ct);
         }
 
         private async Task ExecuteListTicketsAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)

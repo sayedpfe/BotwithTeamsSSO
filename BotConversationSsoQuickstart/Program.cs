@@ -27,6 +27,7 @@ builder.Services.AddSingleton<UserState>();
 builder.Services.AddSingleton<ConversationState>();
 
 // Dialogs
+builder.Services.AddSingleton<CreateTicketDialog>();
 builder.Services.AddSingleton<MainDialog>();
 
 // Bot

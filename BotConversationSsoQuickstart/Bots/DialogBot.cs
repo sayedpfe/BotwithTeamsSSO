@@ -45,6 +45,28 @@ namespace Microsoft.BotBuilderSamples
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+            // First, check if there's an active dialog and continue it
+            var accessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
+            var dialogSet = new DialogSet(accessor);
+            dialogSet.Add(_dialog);
+
+            var dc = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
+            var result = await dc.ContinueDialogAsync(cancellationToken);
+
+            // If dialog was continued, we're done
+            if (result.Status != DialogTurnStatus.Empty)
+            {
+                return;
+            }
+
+            // Check if this is a card submit action
+            if (turnContext.Activity.Value != null && turnContext.Activity.Text == null)
+            {
+                await HandleCardSubmitActionAsync(turnContext, cancellationToken);
+                return;
+            }
+
+            // No active dialog, so process as a command
             var text = (turnContext.Activity.Text ?? string.Empty).Trim().ToLowerInvariant();
 
             switch (text)
@@ -95,11 +117,7 @@ namespace Microsoft.BotBuilderSamples
             dialogSet.Add(_dialog);
 
             var dc = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
-            var result = await dc.ContinueDialogAsync(cancellationToken);
-            if (result.Status == DialogTurnStatus.Empty)
-            {
-                await dc.BeginDialogAsync(_dialog.Id, new GraphActionOptions { Action = action }, cancellationToken);
-            }
+            await dc.BeginDialogAsync(_dialog.Id, new GraphActionOptions { Action = action }, cancellationToken);
         }
 
         private async Task HandleLogoutAsync(ITurnContext turnContext, CancellationToken cancellationToken)
@@ -140,6 +158,33 @@ namespace Microsoft.BotBuilderSamples
                 return token?.Token;
             }
             return null;
+        }
+
+        private async Task HandleCardSubmitActionAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var value = turnContext.Activity.Value as Newtonsoft.Json.Linq.JObject;
+                var action = value?["action"]?.ToString();
+
+                switch (action)
+                {
+                    case "viewTickets":
+                        await BeginGraphActionAsync(turnContext, GraphAction.ListTickets, cancellationToken);
+                        break;
+                    case "createTicket":
+                        await BeginGraphActionAsync(turnContext, GraphAction.CreateTicket, cancellationToken);
+                        break;
+                    default:
+                        await turnContext.SendActivityAsync("I didn't understand that action. Type 'help' for available commands.", cancellationToken: cancellationToken);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling card submit action");
+                await turnContext.SendActivityAsync("Something went wrong processing that action. Type 'help' for available commands.", cancellationToken: cancellationToken);
+            }
         }
     }
 }
