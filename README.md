@@ -1,8 +1,8 @@
-# Teams SSO with Support Tickets Solution
+# Teams SSO with Support Tickets Solution v1.2
 
 This solution demonstrates a comprehensive Teams Bot with Single Sign-On (SSO) authentication that integrates with a secure Support Tickets API. The solution features interactive ticket creation, Azure Table Storage, and modern Adaptive Card experiences for enhanced user engagement.
 
-## 🎯 Latest Updates (v2.0)
+## 🎯 Latest Updates (v1.2)
 
 ### ✅ **Enhanced User Experience**
 - **Interactive Ticket Creation**: Multi-step dialog for collecting ticket details

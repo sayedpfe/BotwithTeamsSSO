@@ -3,6 +3,11 @@
   <PropertyGroup>
 	  <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Title>Teams Bot with SSO and Interactive Ticket Creation</Title>
+    <Description>Enhanced Teams Bot with interactive ticket creation, Adaptive Cards, and Azure Table Storage integration</Description>
   </PropertyGroup>
 
   <ItemGroup>

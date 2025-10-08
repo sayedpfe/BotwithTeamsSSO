@@ -4,6 +4,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Title>Support Tickets API with Azure Table Storage</Title>
+    <Description>Secure REST API for managing support tickets with Azure Table Storage and Azure AD authentication</Description>
   </PropertyGroup>
   
   <ItemGroup>
