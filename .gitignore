@@ -361,11 +361,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-
-# Development and testing artifacts
-*.ps1
-*.zip
-publish-*/
-app_logs.zip
-api-deployment*.zip
-api-v*.zip
