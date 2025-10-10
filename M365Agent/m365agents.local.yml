@@ -54,8 +54,13 @@ provision:
         MicrosoftAppId: ${{AAD_APP_CLIENT_ID}}
         MicrosoftAppPassword: ${{SECRET_AAD_APP_CLIENT_SECRET}}
         ConnectionName: ${{CONNECTION_NAME}}
+        ConnectionNameGraph: ${{CONNECTION_NAME}}
+        ConnectionNameTickets: "ticketsoauth"
         MicrosoftAppType: ${{MICROSOFT_APP_TYPE}}
         MicrosoftAppTenantId: ${{MICROSOFT_APP_TENANT_ID}}
+        TicketApi:
+          BaseUrl: ${{TICKET_API_BASE_URL}}
+          AuthType: ${{TICKET_API_AUTH_TYPE}}
 
   - uses: aadApp/update # Apply the AAD manifest to an existing AAD app. Will use the object id in manifest file to determine which AAD app to update.
     with:

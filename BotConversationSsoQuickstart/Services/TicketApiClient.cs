@@ -23,7 +23,7 @@ namespace Microsoft.BotBuilderSamples.Services
         public TicketApiClient(HttpClient http, IConfiguration cfg)
         {
             _http = http;
-            _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/') 
+            _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/')
                 ?? throw new System.InvalidOperationException("TicketApi:BaseUrl missing");
             _authType = cfg["TicketApi:AuthType"] ?? "None";
 
@@ -65,7 +65,7 @@ namespace Microsoft.BotBuilderSamples.Services
         public async Task<TicketDto> CreateAsync(string title, string description, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
-            
+
             // Add authentication if configured
             var token = await GetAccessTokenAsync(ct);
             if (token != null)
@@ -87,7 +87,7 @@ namespace Microsoft.BotBuilderSamples.Services
         public async Task<TicketDto[]> ListAsync(int top, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{_base}/api/tickets?top={top}");
-            
+
             // Add authentication if configured
             var token = await GetAccessTokenAsync(ct);
             if (token != null)

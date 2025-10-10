@@ -12,17 +12,24 @@ builder.Logging.AddConsole();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Use your bot's tenant and app registration
+        // Use your bot's tenant and app registration - Accept the exposed API scopes
         options.Authority = "https://login.microsoftonline.com/b22f8675-8375-455b-941a-67bee4cf7747/v2.0";
-        options.Audience = "89155d3a-359d-4603-b821-0504395e331f"; // Your bot's app ID
-        
+        options.Audience = "api://botid-89155d3a-359d-4603-b821-0504395e331f"; // Your exposed API
+
         options.TokenValidationParameters.ValidAudiences = new[]
         {
             "89155d3a-359d-4603-b821-0504395e331f", // Your bot's app ID
-            "api://89155d3a-359d-4603-b821-0504395e331f" // Alternative format
+            "api://89155d3a-359d-4603-b821-0504395e331f", // Alternative format
+            "api://botid-89155d3a-359d-4603-b821-0504395e331f", // Your exposed API
+            "https://graph.microsoft.com" // Accept Graph tokens too
         };
-        
-        options.TokenValidationParameters.ValidIssuer = "https://sts.windows.net/b22f8675-8375-455b-941a-67bee4cf7747/";
+
+        // Accept both v1 and v2 issuers
+        options.TokenValidationParameters.ValidIssuers = new[]
+        {
+            "https://sts.windows.net/b22f8675-8375-455b-941a-67bee4cf7747/", // v1 issuer
+            "https://login.microsoftonline.com/b22f8675-8375-455b-941a-67bee4cf7747/v2.0" // v2 issuer
+        };
         
         // Optional: Add logging for debugging
         options.Events = new JwtBearerEvents
@@ -30,6 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnAuthenticationFailed = context =>
             {
                 Console.WriteLine($"Authentication failed: {context.Exception}");
+                Console.WriteLine($"Token: {context.Request.Headers.Authorization}");
                 return Task.CompletedTask;
             },
             OnTokenValidated = context =>
@@ -42,34 +50,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Configure storage based on configuration
-var storageType = builder.Configuration["Storage:Type"] ?? "File";
+// Configure Azure Table Storage
+var accountUrl = "https://sayedsupportticketsstg.table.core.windows.net";
 
-if (storageType.Equals("TableStorage", StringComparison.OrdinalIgnoreCase))
+try
 {
-    // Azure Table Storage configuration with Azure AD authentication
-    var accountUrl = builder.Configuration["AzureTable:AccountUrl"] 
-                  ?? "https://sayedsupportticketsstg.table.core.windows.net";
+    // Use Azure AD authentication (DefaultAzureCredential)
+    var tableServiceClient = new TableServiceClient(new Uri(accountUrl), new DefaultAzureCredential());
+    builder.Services.AddSingleton(tableServiceClient);
     
-    if (!string.IsNullOrEmpty(accountUrl))
-    {
-        // Use Azure AD authentication (DefaultAzureCredential)
-        builder.Services.AddSingleton(new TableServiceClient(new Uri(accountUrl), new Azure.Identity.DefaultAzureCredential()));
-        builder.Services.AddSingleton<ITicketRepository, TableStorageTicketRepository>();
-        Console.WriteLine("Using Azure Table Storage with Azure AD authentication for ticket repository");
-    }
-    else
-    {
-        // Fallback to file storage
-        builder.Services.AddSingleton<ITicketRepository, FileTicketRepository>();
-        Console.WriteLine("No Table Storage account URL found, falling back to File Storage");
-    }
+    // Register both repositories for Table Storage
+    builder.Services.AddSingleton<ITicketRepository, TableStorageTicketRepository>();
+    builder.Services.AddSingleton<IFeedbackRepository, TableStorageFeedbackRepository>();
+    
+    Console.WriteLine("Using Azure Table Storage with Azure AD authentication for ticket and feedback repositories");
 }
-else
+catch (Exception ex)
 {
-    // Default to file storage
+    Console.WriteLine($"Failed to configure Table Storage: {ex.Message}");
+    // Fallback to file storage
     builder.Services.AddSingleton<ITicketRepository, FileTicketRepository>();
-    Console.WriteLine("Using File Storage for ticket repository");
+    builder.Services.AddSingleton<IFeedbackRepository, FileFeedbackRepository>();
+    Console.WriteLine("Falling back to file-based storage for ticket and feedback repositories");
 }
 
 builder.Services.AddControllers();
@@ -81,6 +83,22 @@ var app = builder.Build();
 // Health first so probes succeed even if auth config was skipped
 app.MapGet("/health", () => Results.Ok(new { status = "OK", time = DateTimeOffset.UtcNow }))
    .AllowAnonymous();
+
+// Test endpoint to isolate authentication from storage
+app.MapGet("/test/auth", (HttpContext context) => 
+{
+    var user = context.User;
+    var claims = user.Claims.Select(c => new { c.Type, c.Value }).ToList();
+    
+    return Results.Ok(new { 
+        authenticated = user.Identity?.IsAuthenticated,
+        name = user.Identity?.Name,
+        authType = user.Identity?.AuthenticationType,
+        claims = claims,
+        time = DateTimeOffset.UtcNow 
+    });
+})
+.RequireAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
