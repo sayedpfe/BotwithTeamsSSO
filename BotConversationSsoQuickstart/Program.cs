@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
@@ -9,6 +10,7 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.BotBuilderSamples;
 using Microsoft.BotBuilderSamples.Dialogs;
+using Microsoft.BotBuilderSamples.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -34,7 +36,15 @@ builder.Services.AddSingleton<MainDialog>();
 
 // Bot
 builder.Services.AddTransient<IBot, TeamsBot<MainDialog>>();
-builder.Services.AddHttpClient<Microsoft.BotBuilderSamples.Services.TicketApiClient>();
+
+// HTTP Client with detailed logging for API calls
+builder.Services.AddTransient<ApiLoggingHandler>();
+builder.Services.AddHttpClient<Microsoft.BotBuilderSamples.Services.TicketApiClient>(client =>
+{
+    // Configure HTTP client timeouts and settings
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<ApiLoggingHandler>();
 
 var app = builder.Build();
 
