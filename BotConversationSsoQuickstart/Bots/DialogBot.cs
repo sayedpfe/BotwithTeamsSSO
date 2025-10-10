@@ -11,9 +11,7 @@ using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using Microsoft.BotBuilderSamples.Services;
-using Microsoft.BotBuilderSamples.Dialogs;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -167,120 +165,25 @@ namespace Microsoft.BotBuilderSamples
             try
             {
                 var value = turnContext.Activity.Value as Newtonsoft.Json.Linq.JObject;
-                var actionJson = value?.ToString();
-                
-                Console.WriteLine($"[DialogBot] Handling card submit action. Value: {actionJson}");
-                
-                if (!string.IsNullOrEmpty(actionJson))
-                {
-                    // Try to parse as GraphActionOptions first
-                    try
-                    {
-                        var graphAction = JsonConvert.DeserializeObject<GraphActionOptions>(actionJson);
-                        if (graphAction?.Action != GraphAction.None)
-                        {
-                            Console.WriteLine($"[DialogBot] Parsed as GraphActionOptions: {graphAction.Action}");
-                            await HandleGraphActionAsync(turnContext, graphAction, cancellationToken);
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[DialogBot] Failed to parse as GraphActionOptions: {ex.Message}");
-                        // If it fails, try legacy action parsing
-                    }
-                }
-
-                // Legacy action parsing
                 var action = value?["action"]?.ToString();
-                Console.WriteLine($"[DialogBot] Legacy action parsing - action: '{action}'");
 
                 switch (action)
                 {
                     case "viewTickets":
-                        Console.WriteLine("[DialogBot] Handling viewTickets action");
                         await BeginGraphActionAsync(turnContext, GraphAction.ListTickets, cancellationToken);
-                        Console.WriteLine("[DialogBot] viewTickets action completed successfully");
                         break;
                     case "createTicket":
-                        Console.WriteLine("[DialogBot] Handling createTicket action");
                         await BeginGraphActionAsync(turnContext, GraphAction.CreateTicket, cancellationToken);
                         break;
-                    case "submitFeedback":
-                        Console.WriteLine("[DialogBot] Handling submitFeedback action");
-                        // Handle direct feedback submission
-                        await HandleFeedbackSubmissionAsync(turnContext, value, cancellationToken);
-                        break;
                     default:
-                        Console.WriteLine($"[DialogBot] Unknown action: '{action}'");
                         await turnContext.SendActivityAsync("I didn't understand that action. Type 'help' for available commands.", cancellationToken: cancellationToken);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DialogBot] Exception in HandleCardSubmitActionAsync: {ex.Message}");
-                Console.WriteLine($"[DialogBot] Stack trace: {ex.StackTrace}");
                 _logger.LogError(ex, "Error handling card submit action");
                 await turnContext.SendActivityAsync("Something went wrong processing that action. Type 'help' for available commands.", cancellationToken: cancellationToken);
-            }
-        }
-
-        private async Task HandleGraphActionAsync(ITurnContext turnContext, GraphActionOptions graphAction, CancellationToken cancellationToken)
-        {
-            switch (graphAction.Action)
-            {
-                case GraphAction.ShowFeedbackForm:
-                    await BeginFeedbackDialogAsync(turnContext, graphAction.Payload as FeedbackData, cancellationToken);
-                    break;
-                case GraphAction.SubmitFeedback:
-                    // This should be handled by the FeedbackDialog itself
-                    break;
-                default:
-                    await BeginGraphActionAsync(turnContext, graphAction.Action, cancellationToken);
-                    break;
-            }
-        }
-
-        private async Task BeginFeedbackDialogAsync(ITurnContext turnContext, FeedbackData feedbackData, CancellationToken cancellationToken)
-        {
-            var accessor = _conversationState.CreateProperty<DialogState>(nameof(DialogState));
-            var dialogSet = new DialogSet(accessor);
-            
-            // Create a temporary FeedbackDialog for this interaction
-            var feedbackDialog = new FeedbackDialog(_ticketClient, _logger as ILogger<FeedbackDialog>);
-            dialogSet.Add(feedbackDialog);
-
-            var dc = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
-            await dc.BeginDialogAsync(feedbackDialog.Id, feedbackData, cancellationToken);
-        }
-
-        private async Task HandleFeedbackSubmissionAsync(ITurnContext turnContext, Newtonsoft.Json.Linq.JObject value, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var feedbackSubmission = JsonConvert.DeserializeObject<FeedbackSubmission>(value.ToString());
-                
-                var feedbackRequest = new
-                {
-                    UserId = turnContext.Activity.From.Id,
-                    UserName = turnContext.Activity.From.Name ?? "Unknown User",
-                    ConversationId = turnContext.Activity.Conversation.Id,
-                    ActivityId = feedbackSubmission.ActivityId ?? turnContext.Activity.ReplyToId ?? "",
-                    BotResponse = feedbackSubmission.BotResponse ?? "",
-                    Reaction = feedbackSubmission.Reaction ?? "",
-                    Comment = feedbackSubmission.Comment ?? "",
-                    Category = feedbackSubmission.Category ?? "General"
-                };
-
-                await _ticketClient.SubmitFeedbackAsync(feedbackRequest, cancellationToken);
-                await turnContext.SendActivityAsync("Thank you for your feedback! Your input helps us improve.", cancellationToken: cancellationToken);
-                _logger.LogInformation("Feedback submitted successfully for user {UserId}", turnContext.Activity.From.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error submitting feedback");
-                await turnContext.SendActivityAsync("Sorry, there was an error submitting your feedback.", cancellationToken: cancellationToken);
             }
         }
     }

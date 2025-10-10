@@ -13,7 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.BotBuilderSamples.Services;
-using Microsoft.BotBuilderSamples.Dialogs;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -34,7 +33,6 @@ namespace Microsoft.BotBuilderSamples
         private const string GraphPromptId = "GraphOAuthPrompt";
         private const string TicketsPromptId = "TicketsOAuthPrompt";
         private const string CreateTicketDialogId = "CreateTicketDialog";
-        private const string FeedbackDialogId = "FeedbackDialog";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
@@ -77,9 +75,6 @@ namespace Microsoft.BotBuilderSamples
 
             // Add the create ticket dialog
             AddDialog(new CreateTicketDialog(ticketClient, loggerFactory.CreateLogger<CreateTicketDialog>()));
-            
-            // Add the feedback dialog
-            AddDialog(new FeedbackDialog(ticketClient, loggerFactory.CreateLogger<FeedbackDialog>()));
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
@@ -160,7 +155,6 @@ namespace Microsoft.BotBuilderSamples
         {
             var action = (GraphAction)step.Values[ActionKey];
             var tokens = (Dictionary<string, string>)step.Values[TokensKey];
-            var opts = step.Options as GraphActionOptions ?? new GraphActionOptions { Action = GraphAction.None };
 
             string tokenValue = null;
 
@@ -204,8 +198,6 @@ namespace Microsoft.BotBuilderSamples
                     case GraphAction.ListTickets:
                         await ExecuteListTicketsAsync(step, tokenValue, ct);
                         break;
-                    case GraphAction.ShowFeedbackForm:
-                        return await step.BeginDialogAsync(FeedbackDialogId, opts.Payload, cancellationToken: ct);
                     default:
                         await step.Context.SendActivityAsync("Unknown action.", cancellationToken: ct);
                         break;
@@ -226,21 +218,15 @@ namespace Microsoft.BotBuilderSamples
             var list = await _ticketClient.ListAsync(5, ct);
             if (list == null || list.Length == 0)
             {
-                var noTicketsResponse = await step.Context.SendActivityAsync("No tickets found.", cancellationToken: ct);
-                await SendFeedbackButtonsAsync(step.Context, noTicketsResponse?.Id, "No tickets found.", "ListTickets", ct);
+                await step.Context.SendActivityAsync("No tickets found.", cancellationToken: ct);
                 return;
             }
             
-            var ticketsMessage = "**Your Support Tickets:**";
-            var responseActivity = await step.Context.SendActivityAsync(ticketsMessage, cancellationToken: ct);
-            
+            await step.Context.SendActivityAsync("**Your Support Tickets:**", cancellationToken: ct);
             foreach (var t in list)
             {
                 await step.Context.SendActivityAsync($"🎫 **[{t.Status}]** {t.Title} (ID: {t.Id})", cancellationToken: ct);
             }
-            
-            // Add feedback buttons to the tickets list response
-            await SendFeedbackButtonsAsync(step.Context, responseActivity?.Id, ticketsMessage, "ListTickets", ct);
         }
 
         private async Task ExecuteProfileAsync(WaterfallStepContext step, string graphToken, CancellationToken ct)
@@ -258,10 +244,7 @@ namespace Microsoft.BotBuilderSamples
                                   $"**Job Title:** {user.JobTitle ?? "Not specified"}\n" +
                                   $"**Department:** {user.Department ?? "Not specified"}";
 
-                    var responseActivity = await step.Context.SendActivityAsync(MessageFactory.Text(message), cancellationToken: ct);
-                    
-                    // Add feedback buttons to profile response
-                    await SendFeedbackButtonsAsync(step.Context, responseActivity?.Id, message, "Profile", ct);
+                    await step.Context.SendActivityAsync(MessageFactory.Text(message), cancellationToken: ct);
 
                     // Try to get and send user photo
                     try
@@ -307,8 +290,7 @@ namespace Microsoft.BotBuilderSamples
                 
                 if (messages != null && messages.Length > 0)
                 {
-                    var headerMessage = "**Recent Emails:**";
-                    var responseActivity = await step.Context.SendActivityAsync(headerMessage, cancellationToken: ct);
+                    await step.Context.SendActivityAsync("**Recent Emails:**", cancellationToken: ct);
                     
                     foreach (var message in messages)
                     {
@@ -323,15 +305,10 @@ namespace Microsoft.BotBuilderSamples
                         
                         await step.Context.SendActivityAsync(MessageFactory.Text(emailInfo), cancellationToken: ct);
                     }
-                    
-                    // Add feedback buttons to recent mail response
-                    await SendFeedbackButtonsAsync(step.Context, responseActivity?.Id, headerMessage, "RecentMail", ct);
                 }
                 else
                 {
-                    var noEmailsMessage = "No recent emails found.";
-                    var responseActivity = await step.Context.SendActivityAsync(noEmailsMessage, cancellationToken: ct);
-                    await SendFeedbackButtonsAsync(step.Context, responseActivity?.Id, noEmailsMessage, "RecentMail", ct);
+                    await step.Context.SendActivityAsync("No recent emails found.", cancellationToken: ct);
                 }
             }
             catch (Exception ex)
@@ -358,11 +335,7 @@ namespace Microsoft.BotBuilderSamples
                                  "Best regards,\nYour Teams Bot";
 
                     await graphClient.SendMailAsync(recipientEmail, subject, content);
-                    var successMessage = $"✅ Test email sent successfully to {recipientEmail}";
-                    var responseActivity = await step.Context.SendActivityAsync(successMessage, cancellationToken: ct);
-                    
-                    // Add feedback buttons to send mail response
-                    await SendFeedbackButtonsAsync(step.Context, responseActivity?.Id, successMessage, "SendTestMail", ct);
+                    await step.Context.SendActivityAsync($"✅ Test email sent successfully to {recipientEmail}", cancellationToken: ct);
                 }
                 else
                 {
@@ -373,24 +346,6 @@ namespace Microsoft.BotBuilderSamples
             {
                 _logger.LogError(ex, "Error sending test email");
                 await step.Context.SendActivityAsync("An error occurred while sending the test email.", cancellationToken: ct);
-            }
-        }
-
-        /// <summary>
-        /// Sends feedback buttons as a follow-up message to collect user feedback
-        /// </summary>
-        private async Task SendFeedbackButtonsAsync(ITurnContext context, string activityId, string botResponse, string category, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var feedbackCard = FeedbackDialog.CreateFeedbackButtonsCard(activityId ?? "", botResponse, category);
-                var feedbackMessage = MessageFactory.Attachment(feedbackCard);
-                await context.SendActivityAsync(feedbackMessage, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to send feedback buttons for category {Category}", category);
-                // Don't fail the main operation if feedback buttons fail
             }
         }
     }
