@@ -19,6 +19,20 @@ namespace Microsoft.BotBuilderSamples.Services
 
         public record TicketDto(string Id, string Title, string Description, string Status);
         public record CreateTicketRequest(string Title, string Description);
+        public record FeedbackDto(
+            string Id, 
+            string UserId, 
+            string UserName, 
+            string ConversationId, 
+            string ActivityId, 
+            string BotResponse, 
+            string Reaction, 
+            string Comment, 
+            DateTime CreatedAt, 
+            string Source, 
+            string Category
+        );
+        public record CreateFeedbackRequest(string UserId, string UserName, string ConversationId, string ActivityId, string BotResponse, string Reaction, string Comment, string Category);
 
         public TicketApiClient(HttpClient http, IConfiguration cfg)
         {
@@ -49,7 +63,7 @@ namespace Microsoft.BotBuilderSamples.Services
 
             try
             {
-                // Get token for the API using the working scope format (no api:// prefix)
+                // Get token for the API using the working scope format
                 var result = await _authApp.AcquireTokenForClient(new[] { "89155d3a-359d-4603-b821-0504395e331f/.default" })
                     .ExecuteAsync();
                 return result.AccessToken;
@@ -99,6 +113,53 @@ namespace Microsoft.BotBuilderSamples.Services
             if (!resp.IsSuccessStatusCode) return null;
             var json = await resp.Content.ReadAsStringAsync(ct);
             return JsonSerializer.Deserialize<TicketDto[]>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+
+        public async Task<FeedbackDto> SubmitFeedbackAsync(object feedbackData, CancellationToken ct = default)
+        {
+            try
+            {
+                Console.WriteLine($"[TicketApiClient] Starting feedback submission with data: {JsonSerializer.Serialize(feedbackData)}");
+                
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/feedback");
+                
+                // Add authentication if configured
+                var token = await GetAccessTokenAsync(ct);
+                if (token != null)
+                {
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Console.WriteLine("[TicketApiClient] Authentication header added");
+                }
+                else
+                {
+                    Console.WriteLine("[TicketApiClient] No authentication token - proceeding without auth");
+                }
+
+                req.Content = JsonContent.Create(feedbackData);
+                Console.WriteLine($"[TicketApiClient] Making POST request to: {_base}/api/feedback");
+                
+                var resp = await _http.SendAsync(req, ct);
+                var body = await resp.Content.ReadAsStringAsync(ct);
+
+                Console.WriteLine($"[TicketApiClient] Response status: {resp.StatusCode}");
+                Console.WriteLine($"[TicketApiClient] Response body: {body}");
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[TicketApiClient] ERROR: API call failed with status {resp.StatusCode}");
+                    return null; // Keep return contract but log
+                }
+                
+                var result = JsonSerializer.Deserialize<FeedbackDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                Console.WriteLine($"[TicketApiClient] Successfully deserialized response");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TicketApiClient] Exception in SubmitFeedbackAsync: {ex.Message}");
+                Console.WriteLine($"[TicketApiClient] Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
     }
 }

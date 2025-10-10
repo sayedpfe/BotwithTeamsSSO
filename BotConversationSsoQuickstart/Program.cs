@@ -8,6 +8,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.BotBuilderSamples;
+using Microsoft.BotBuilderSamples.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -28,6 +29,7 @@ builder.Services.AddSingleton<ConversationState>();
 
 // Dialogs
 builder.Services.AddSingleton<CreateTicketDialog>();
+builder.Services.AddSingleton<FeedbackDialog>();
 builder.Services.AddSingleton<MainDialog>();
 
 // Bot

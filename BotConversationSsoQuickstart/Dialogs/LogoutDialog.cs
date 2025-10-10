@@ -85,7 +85,7 @@ namespace Microsoft.BotBuilderSamples
         {
             if (innerDc.Context.Activity.Type == ActivityTypes.Message)
             {
-                var text = innerDc.Context.Activity.Text.ToLowerInvariant();
+                var text = innerDc.Context.Activity.Text?.ToLowerInvariant() ?? string.Empty;
 
                 // Allow logout anywhere in the command
                 if (text.Contains("logout"))
