@@ -19,11 +19,12 @@ namespace Microsoft.BotBuilderSamples.Services
 
         public record TicketDto(string Id, string Title, string Description, string Status);
         public record CreateTicketRequest(string Title, string Description);
+        public record FeedbackDto(string Id, string Type, string Comment, DateTime CreatedAt);
 
         public TicketApiClient(HttpClient http, IConfiguration cfg)
         {
             _http = http;
-            _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/')
+            _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/') 
                 ?? throw new System.InvalidOperationException("TicketApi:BaseUrl missing");
             _authType = cfg["TicketApi:AuthType"] ?? "None";
 
@@ -65,7 +66,7 @@ namespace Microsoft.BotBuilderSamples.Services
         public async Task<TicketDto> CreateAsync(string title, string description, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
-
+            
             // Add authentication if configured
             var token = await GetAccessTokenAsync(ct);
             if (token != null)
@@ -87,7 +88,7 @@ namespace Microsoft.BotBuilderSamples.Services
         public async Task<TicketDto[]> ListAsync(int top, CancellationToken ct)
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{_base}/api/tickets?top={top}");
-
+            
             // Add authentication if configured
             var token = await GetAccessTokenAsync(ct);
             if (token != null)
@@ -99,6 +100,52 @@ namespace Microsoft.BotBuilderSamples.Services
             if (!resp.IsSuccessStatusCode) return null;
             var json = await resp.Content.ReadAsStringAsync(ct);
             return JsonSerializer.Deserialize<TicketDto[]>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+
+        public async Task<FeedbackDto> SubmitFeedbackAsync(object feedbackData, CancellationToken ct = default)
+        {
+            try
+            {
+                Console.WriteLine($"[TicketApiClient] Starting feedback submission with data: {JsonSerializer.Serialize(feedbackData)}");
+
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/feedback");
+
+                // Add authentication if configured
+                var token = await GetAccessTokenAsync(ct);
+                if (token != null)
+                {
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Console.WriteLine("[TicketApiClient] Authentication header added");
+                }
+                else
+                {
+                    Console.WriteLine("[TicketApiClient] No authentication token - proceeding without auth");
+                }
+
+                req.Content = JsonContent.Create(feedbackData);
+                Console.WriteLine($"[TicketApiClient] Making POST request to: {_base}/api/feedback");
+                var resp = await _http.SendAsync(req, ct);
+                var body = await resp.Content.ReadAsStringAsync(ct);
+
+                Console.WriteLine($"[TicketApiClient] Response status: {resp.StatusCode}");
+                Console.WriteLine($"[TicketApiClient] Response body: {body}");
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[TicketApiClient] ERROR: API call failed with status {resp.StatusCode}");
+                    return null; // Keep return contract but log
+                }
+
+                var result = JsonSerializer.Deserialize<FeedbackDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                Console.WriteLine($"[TicketApiClient] Successfully deserialized response");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TicketApiClient] Exception in SubmitFeedbackAsync: {ex.Message}");
+                Console.WriteLine($"[TicketApiClient] Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
     }
 }

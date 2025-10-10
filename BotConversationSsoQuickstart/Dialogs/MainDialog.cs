@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.BotBuilderSamples.Services;
+using Microsoft.BotBuilderSamples.Dialogs;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -33,6 +34,7 @@ namespace Microsoft.BotBuilderSamples
         private const string GraphPromptId = "GraphOAuthPrompt";
         private const string TicketsPromptId = "TicketsOAuthPrompt";
         private const string CreateTicketDialogId = "CreateTicketDialog";
+        private const string FeedbackDialogId = "FeedbackDialog";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
@@ -75,6 +77,9 @@ namespace Microsoft.BotBuilderSamples
 
             // Add the create ticket dialog
             AddDialog(new CreateTicketDialog(ticketClient, loggerFactory.CreateLogger<CreateTicketDialog>()));
+
+            // Add the feedback dialog
+            AddDialog(new FeedbackDialog(ticketClient, loggerFactory.CreateLogger<FeedbackDialog>()));
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
@@ -198,6 +203,8 @@ namespace Microsoft.BotBuilderSamples
                     case GraphAction.ListTickets:
                         await ExecuteListTicketsAsync(step, tokenValue, ct);
                         break;
+                    case GraphAction.ShowFeedbackForm:
+                        return await ExecuteShowFeedbackFormAsync(step, ct);
                     default:
                         await step.Context.SendActivityAsync("Unknown action.", cancellationToken: ct);
                         break;
@@ -347,6 +354,20 @@ namespace Microsoft.BotBuilderSamples
                 _logger.LogError(ex, "Error sending test email");
                 await step.Context.SendActivityAsync("An error occurred while sending the test email.", cancellationToken: ct);
             }
+        }
+
+        private async Task<DialogTurnResult> ExecuteShowFeedbackFormAsync(WaterfallStepContext step, CancellationToken ct)
+        {
+            var opts = step.Options as GraphActionOptions;
+            var feedbackData = opts?.Payload as FeedbackData;
+            
+            if (feedbackData != null)
+            {
+                return await step.BeginDialogAsync(FeedbackDialogId, feedbackData, ct);
+            }
+            
+            await step.Context.SendActivityAsync("Sorry, there was an error processing your feedback request.", cancellationToken: ct);
+            return await step.EndDialogAsync(null, ct);
         }
     }
 }
