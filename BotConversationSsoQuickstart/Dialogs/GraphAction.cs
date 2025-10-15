@@ -8,8 +8,7 @@ namespace Microsoft.BotBuilderSamples
         SendTestMail = 3,
         CreateTicket = 4,
         ListTickets = 5,
-        SubmitFeedback = 6,
-        ShowFeedbackForm = 7
+        ShowFeedbackForm = 6
     }
 
     public sealed class GraphActionOptions

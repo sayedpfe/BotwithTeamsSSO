@@ -1,0 +1,40 @@
+{
+  "Tickets": [
+    {
+      "UserId": "11111111-aaaa-bbbb-cccc-111111111111",
+      "Id": "f2c9c4b6c3a14d12a6b6d7c8e901ab01",
+      "Title": "Cannot access dashboard",
+      "Description": "When I open the dashboard it shows a 403 error.",
+      "Status": "New",
+      "CreatedByDisplayName": "Alice Example",
+      "CreatedUtc": "2025-10-06T09:00:00Z",
+      "LastUpdatedUtc": "2025-10-06T09:00:00Z",
+      "Deleted": false,
+      "Version": 0
+    },
+    {
+      "UserId": "11111111-aaaa-bbbb-cccc-111111111111",
+      "Id": "a0d7e4f29c124d66a0e9d1b5c71fa202",
+      "Title": "Export timing out",
+      "Description": "CSV export takes too long (>2 minutes).",
+      "Status": "InProgress",
+      "CreatedByDisplayName": "Alice Example",
+      "CreatedUtc": "2025-10-06T09:05:00Z",
+      "LastUpdatedUtc": "2025-10-06T09:10:00Z",
+      "Deleted": false,
+      "Version": 2
+    },
+    {
+      "UserId": "22222222-bbbb-cccc-dddd-222222222222",
+      "Id": "b7f0c1d2e3f445f2a112bb33cc44dd55",
+      "Title": "Feature request: dark mode",
+      "Description": "It would be great to have a dark mode option in settings.",
+      "Status": "Resolved",
+      "CreatedByDisplayName": "Bob Example",
+      "CreatedUtc": "2025-10-05T18:25:00Z",
+      "LastUpdatedUtc": "2025-10-06T08:45:00Z",
+      "Deleted": false,
+      "Version": 3
+    }
+  ]
+}

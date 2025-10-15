@@ -17,13 +17,19 @@ namespace Microsoft.BotBuilderSamples.Services
         private readonly string _authType;
         private readonly IConfidentialClientApplication _authApp;
 
+        /// <summary>
+        /// Gets the last access token used by the API client (for debugging purposes)
+        /// </summary>
+        public string LastTokenUsed { get; private set; }
+
         public record TicketDto(string Id, string Title, string Description, string Status);
         public record CreateTicketRequest(string Title, string Description);
+        public record FeedbackDto(string Id, string Type, string Comment, DateTime CreatedAt);
 
         public TicketApiClient(HttpClient http, IConfiguration cfg)
         {
             _http = http;
-            _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/')
+            _base = cfg["TicketApi:BaseUrl"]?.TrimEnd('/') 
                 ?? throw new System.InvalidOperationException("TicketApi:BaseUrl missing");
             _authType = cfg["TicketApi:AuthType"] ?? "None";
 
@@ -42,63 +48,163 @@ namespace Microsoft.BotBuilderSamples.Services
             }
         }
 
-        private async Task<string> GetAccessTokenAsync(CancellationToken ct)
+        private async Task<string> GetAccessTokenAsync(string userToken, CancellationToken ct)
         {
-            if (_authType != "AzureAD" || _authApp == null)
-                return null; // No authentication needed
+            // Use the token directly from the ticketsoauth OAuth connection
+            // This token should already have the correct audience for the API
+            if (string.IsNullOrEmpty(userToken))
+            {
+                System.Console.WriteLine("[GetAccessTokenAsync] No user token provided");
+                return null;
+            }
 
+            System.Console.WriteLine($"[GetAccessTokenAsync] Using token directly from ticketsoauth connection");
+            System.Console.WriteLine($"[GetAccessTokenAsync] Token length: {userToken.Length}");
+            
+            if (userToken.Length > 50)
+            {
+                var preview = $"{userToken.Substring(0, 25)}...{userToken.Substring(userToken.Length - 25)}";
+                System.Console.WriteLine($"[GetAccessTokenAsync] Token preview: {preview}");
+            }
+            
+            LastTokenUsed = userToken;
+            return await Task.FromResult(userToken);
+        }
+
+        public async Task<TicketDto> CreateAsync(string title, string description, string userToken, CancellationToken ct)
+        {
             try
             {
-                // Get token for the API using the working scope format (no api:// prefix)
-                var result = await _authApp.AcquireTokenForClient(new[] { "89155d3a-359d-4603-b821-0504395e331f/.default" })
-                    .ExecuteAsync();
-                return result.AccessToken;
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Starting - Title: {title}");
+                Console.WriteLine($"[TicketApiClient.CreateAsync] User token provided: {!string.IsNullOrEmpty(userToken)}");
+                
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
+                
+                // Add authentication if configured
+                var token = await GetAccessTokenAsync(userToken, ct);
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Token to use: {(token != null ? $"Yes (length: {token.Length})" : "No")}");
+                
+                if (token != null)
+                {
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Console.WriteLine("[TicketApiClient.CreateAsync] Authorization header added");
+                }
+
+                req.Content = JsonContent.Create(new CreateTicketRequest(title, description));
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Making POST request to: {_base}/api/tickets");
+                
+                var resp = await _http.SendAsync(req, ct);
+                var body = await resp.Content.ReadAsStringAsync(ct);
+
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Response status: {resp.StatusCode}");
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Response body: {body}");
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[TicketApiClient.CreateAsync] ERROR: API returned {resp.StatusCode}");
+                    return null;
+                }
+                
+                var result = JsonSerializer.Deserialize<TicketDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Successfully created ticket with ID: {result?.Id}");
+                return result;
             }
             catch (Exception ex)
             {
-                // Log error but don't fail - let the API call fail with 401
-                System.Console.WriteLine($"Failed to acquire token: {ex.Message}");
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Exception: {ex.Message}");
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
 
-        public async Task<TicketDto> CreateAsync(string title, string description, CancellationToken ct)
+        public async Task<TicketDto[]> ListAsync(int top, string userToken, CancellationToken ct)
         {
-            using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
-
-            // Add authentication if configured
-            var token = await GetAccessTokenAsync(ct);
-            if (token != null)
+            try
             {
-                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                Console.WriteLine($"[TicketApiClient.ListAsync] Starting - BaseUrl: {_base}, Top: {top}");
+                Console.WriteLine($"[TicketApiClient.ListAsync] User token provided: {!string.IsNullOrEmpty(userToken)}");
+                
+                using var req = new HttpRequestMessage(HttpMethod.Get, $"{_base}/api/tickets?top={top}");
+                
+                // Add authentication if configured
+                var token = await GetAccessTokenAsync(userToken, ct);
+                Console.WriteLine($"[TicketApiClient.ListAsync] Token to use: {(token != null ? $"Yes (length: {token.Length})" : "No")}");
+                
+                if (token != null)
+                {
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Console.WriteLine("[TicketApiClient.ListAsync] Authorization header added");
+                }
+
+                Console.WriteLine($"[TicketApiClient.ListAsync] Making GET request to: {_base}/api/tickets?top={top}");
+                var resp = await _http.SendAsync(req, ct);
+                var json = await resp.Content.ReadAsStringAsync(ct);
+                
+                Console.WriteLine($"[TicketApiClient.ListAsync] Response status: {resp.StatusCode}");
+                Console.WriteLine($"[TicketApiClient.ListAsync] Response body: {json}");
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[TicketApiClient.ListAsync] ERROR: API returned {resp.StatusCode}");
+                    return null;
+                }
+                
+                var result = JsonSerializer.Deserialize<TicketDto[]>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                Console.WriteLine($"[TicketApiClient.ListAsync] Successfully deserialized {result?.Length ?? 0} tickets");
+                return result;
             }
-
-            req.Content = JsonContent.Create(new CreateTicketRequest(title, description));
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-
-            if (!resp.IsSuccessStatusCode)
+            catch (Exception ex)
             {
-                return null; // Keep return contract but log
+                Console.WriteLine($"[TicketApiClient.ListAsync] Exception: {ex.Message}");
+                Console.WriteLine($"[TicketApiClient.ListAsync] Stack trace: {ex.StackTrace}");
+                return null;
             }
-            return JsonSerializer.Deserialize<TicketDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<TicketDto[]> ListAsync(int top, CancellationToken ct)
+        public async Task<FeedbackDto> SubmitFeedbackAsync(object feedbackData, string userToken = null, CancellationToken ct = default)
         {
-            using var req = new HttpRequestMessage(HttpMethod.Get, $"{_base}/api/tickets?top={top}");
-
-            // Add authentication if configured
-            var token = await GetAccessTokenAsync(ct);
-            if (token != null)
+            try
             {
-                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
+                Console.WriteLine($"[TicketApiClient] Starting feedback submission with data: {JsonSerializer.Serialize(feedbackData)}");
 
-            var resp = await _http.SendAsync(req, ct);
-            if (!resp.IsSuccessStatusCode) return null;
-            var json = await resp.Content.ReadAsStringAsync(ct);
-            return JsonSerializer.Deserialize<TicketDto[]>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/feedback");
+
+                // Add authentication if configured
+                var token = await GetAccessTokenAsync(userToken, ct);
+                if (token != null)
+                {
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Console.WriteLine("[TicketApiClient] Authentication header added");
+                }
+                else
+                {
+                    Console.WriteLine("[TicketApiClient] No authentication token - proceeding without auth");
+                }
+
+                req.Content = JsonContent.Create(feedbackData);
+                Console.WriteLine($"[TicketApiClient] Making POST request to: {_base}/api/feedback");
+                var resp = await _http.SendAsync(req, ct);
+                var body = await resp.Content.ReadAsStringAsync(ct);
+
+                Console.WriteLine($"[TicketApiClient] Response status: {resp.StatusCode}");
+                Console.WriteLine($"[TicketApiClient] Response body: {body}");
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[TicketApiClient] ERROR: API call failed with status {resp.StatusCode}");
+                    return null; // Keep return contract but log
+                }
+
+                var result = JsonSerializer.Deserialize<FeedbackDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                Console.WriteLine($"[TicketApiClient] Successfully deserialized response");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TicketApiClient] Exception in SubmitFeedbackAsync: {ex.Message}");
+                Console.WriteLine($"[TicketApiClient] Stack trace: {ex.StackTrace}");
+                return null;
+            }
         }
     }
 }
