@@ -1,10 +1,10 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
-  "manifestVersion": "1.19",
-  "version": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.22",
+  "version": "1.2.0",
   "id": "${{TEAMS_APP_ID}}",
   "developer": {
-    "name": "Teams App, Inc.",
+    "name": "Teams Enterprise Support Hub",
     "websiteUrl": "https://example.azurewebsites.net",
     "privacyUrl": "https://example.azurewebsites.net/privacy",
     "termsOfUseUrl": "https://example.azurewebsites.net/termsofuse"
@@ -14,22 +14,61 @@
     "outline": "outline.png"
   },
   "name": {
-    "short": "Conversation Bot",
-    "full": "Conversation Bot"
+    "short": "Teams Enterprise Support Hub",
+    "full": "Teams Enterprise Support Hub - AI Assistant with M365 Copilot"
   },
   "description": {
-    "short": "Quickly set up Teams bot with SSO for seamless user authentication.",
-    "full": "This sample bot demonstrates implementing SSO in Microsoft Teams using Azure AD."
+    "short": "AI-powered support assistant with feedback collection and ticket management.",
+    "full": "Teams Enterprise Support Hub is an intelligent M365 Copilot custom engine agent that helps manage support tickets, provides instant technical assistance with AI labeling and user feedback collection, and streamlines your enterprise support workflow with authenticated access to Microsoft Graph services."
   },
   "accentColor": "#FFFFFF",
   "bots": [
     {
       "botId": "${{AAD_APP_CLIENT_ID}}",
       "scopes": [
-        "personal"
+        "personal",
+        "groupChat",
+        "team",
+        "copilot"
       ],
       "supportsFiles": false,
-      "isNotificationOnly": false
+      "isNotificationOnly": false,
+      "supportsCalling": false,
+      "supportsVideo": false,
+      "commandLists": [
+        {
+          "scopes": [
+            "copilot",
+            "personal"
+          ],
+          "commands": [
+            {
+              "title": "create ticket",
+              "description": "Create a new support ticket with interactive form and authentication"
+            },
+            {
+              "title": "my tickets",
+              "description": "View your recent support tickets and their current status"
+            },
+            {
+              "title": "profile",
+              "description": "View your Microsoft Graph profile information with SSO authentication"
+            },
+            {
+              "title": "help",
+              "description": "Show all available commands and features with usage examples"
+            },
+            {
+              "title": "mail",
+              "description": "Access your recent emails through Microsoft Graph integration"
+            },
+            {
+              "title": "send mail",
+              "description": "Send a test email using your authenticated Microsoft Graph access"
+            }
+          ]
+        }
+      ]
     }
   ],
   "permissions": [
@@ -43,5 +82,13 @@
   "webApplicationInfo": {
     "id": "${{AAD_APP_CLIENT_ID}}",
     "resource": "api://botid-${{AAD_APP_CLIENT_ID}}"
+  },
+  "copilotAgents": {
+    "customEngineAgents": [
+      {
+        "type": "bot",
+        "id": "${{AAD_APP_CLIENT_ID}}"
+      }
+    ]
   }
 }

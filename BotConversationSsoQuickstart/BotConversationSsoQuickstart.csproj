@@ -22,6 +22,7 @@
 	  <PackageReference Include="Microsoft.Graph.Core" Version="3.2.4" />
 	  <PackageReference Include="Microsoft.Identity.Client" Version="4.77.1" />
 	  <PackageReference Include="Microsoft.Identity.Web" Version="1.25.5" />
+	  <PackageReference Include="Microsoft.Teams.AI" Version="2.0.2" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,9 @@
-// <copyright file="CreateTicketDialog.cs" company="Microsoft">
+// <file file="CreateTicketDialog.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,10 +12,20 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using Microsoft.BotBuilderSamples.Services;
+using Microsoft.BotBuilderSamples.Helpers;
+using BotConversationSsoQuickstart.Helpers;
 using Newtonsoft.Json;
 
 namespace Microsoft.BotBuilderSamples
 {
+    /// <summary>
+    /// Options for CreateTicketDialog.
+    /// </summary>
+    public class CreateTicketOptions
+    {
+        public string UserToken { get; set; }
+    }
+
     /// <summary>
     /// Dialog for creating support tickets with user-provided title and description.
     /// </summary>
@@ -31,6 +42,7 @@ namespace Microsoft.BotBuilderSamples
         // Dialog values keys
         private const string TitleKey = "ticketTitle";
         private const string DescriptionKey = "ticketDescription";
+        private const string UserTokenKey = "userToken";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CreateTicketDialog"/> class.
@@ -66,6 +78,13 @@ namespace Microsoft.BotBuilderSamples
         /// </summary>
         private async Task<DialogTurnResult> PromptForTitleStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            // Capture user token from options
+            var options = stepContext.Options as CreateTicketOptions;
+            if (options != null && !string.IsNullOrEmpty(options.UserToken))
+            {
+                stepContext.Values[UserTokenKey] = options.UserToken;
+            }
+
             var promptOptions = new PromptOptions
             {
                 Prompt = MessageFactory.Text("📝 **Create New Support Ticket**\n\nPlease enter a **title** for your support ticket:"),
@@ -141,49 +160,62 @@ namespace Microsoft.BotBuilderSamples
             var user = stepContext.Context.Activity.From;
             var userName = user?.Name ?? "Unknown User";
 
-            // Show progress message to user
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text("⏳ **Creating your ticket...** Please wait a moment."), cancellationToken);
+            // Show progress message to user with streaming (M365 Copilot requirement)
+            await stepContext.Context.SendStreamingTextAsync("⏳ **Creating your ticket...** Please wait a moment.", cancellationToken);
 
             try
             {
+                // Get the user token from step values
+                var userToken = stepContext.Values.ContainsKey(UserTokenKey) 
+                    ? stepContext.Values[UserTokenKey] as string 
+                    : null;
+
                 // Create a timeout cancellation token (30 seconds)
                 using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-                var ticket = await _ticketClient.CreateAsync(title, description, combinedCts.Token);
+                var ticket = await _ticketClient.CreateAsync(title, description, userToken, combinedCts.Token);
 
                 if (ticket != null)
                 {
-                    // Create and send an Adaptive Card for the success message
-                    var adaptiveCard = CreateTicketSuccessCard(ticket, userName);
-                    var attachment = new Attachment
-                    {
-                        ContentType = "application/vnd.microsoft.card.adaptive",
-                        Content = adaptiveCard
-                    };
-
-                    var message = MessageFactory.Attachment(attachment);
-                    await stepContext.Context.SendActivityAsync(message, cancellationToken);
+                    // Send streaming success indicator
+                    await stepContext.Context.SendStreamingTextAsync("✅ **Ticket created successfully!** Preparing details...", cancellationToken);
+                    
+                    // Small delay for better streaming UX
+                    await Task.Delay(800, cancellationToken);
+                    
+                    // M365 Copilot-optimized rich text response with citations and AI labels
+                    var copilotResponse = CreateCopilotOptimizedResponse(ticket, userName);
+                    
+                    // Send the main response with AI labels and citations
+                    var aiMessage = AiResponseHelper.CreateSupportTicketAiResponse(copilotResponse, includeSystemCitations: true);
+                    await stepContext.Context.SendActivityAsync(aiMessage, cancellationToken);
+                    
+                    // Add suggested follow-up actions (M365 Copilot best practice)
+                    await Task.Delay(300, cancellationToken);
+                    var suggestedActions = CreateSuggestedActions();
+                    var suggestionMessage = MessageFactory.SuggestedActions(suggestedActions, "What would you like to do next?");
+                    await stepContext.Context.SendActivityAsync(suggestionMessage, cancellationToken);
                 }
                 else
                 {
-                    await stepContext.Context.SendActivityAsync(MessageFactory.Text("❌ Failed to create ticket. The service may be temporarily unavailable. Please try again later."), cancellationToken);
+                    await stepContext.Context.SendStreamingTextAsync("❌ Failed to create ticket. The service may be temporarily unavailable. Please try again later.", cancellationToken);
                 }
             }
             catch (OperationCanceledException ex) when (ex.CancellationToken.IsCancellationRequested)
             {
                 _logger.LogWarning("Ticket creation timed out for title: {Title}", title);
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text("⏱️ **Ticket creation timed out.** The service is taking longer than expected. Please try again in a few moments."), cancellationToken);
+                await stepContext.Context.SendStreamingTextAsync("⏱️ **Ticket creation timed out.** The service is taking longer than expected. Please try again in a few moments.", cancellationToken);
             }
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "Network error creating ticket with title: {Title}", title);
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text("🌐 **Network error occurred.** Please check your connection and try again."), cancellationToken);
+                await stepContext.Context.SendStreamingTextAsync("🌐 **Network error occurred.** Please check your connection and try again.", cancellationToken);
             }
             catch (System.Exception ex)
             {
                 _logger.LogError(ex, "Error creating ticket with title: {Title}", title);
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text("❌ An unexpected error occurred while creating the ticket. Please try again later."), cancellationToken);
+                await stepContext.Context.SendStreamingTextAsync("❌ An unexpected error occurred while creating the ticket. Please try again later.", cancellationToken);
             }
 
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
@@ -213,6 +245,61 @@ namespace Microsoft.BotBuilderSamples
             var isValid = !string.IsNullOrWhiteSpace(value) && value.Trim().Length >= 10;
             
             return Task.FromResult(isValid);
+        }
+
+        /// <summary>
+        /// Creates an M365 Copilot-optimized rich text response with citations and AI labels.
+        /// This replaces complex Adaptive Cards with text that works better in Copilot.
+        /// </summary>
+        private static string CreateCopilotOptimizedResponse(TicketApiClient.TicketDto ticket, string userName)
+        {
+            var response = $"# ✅ Support Ticket Created Successfully\n\n" +
+                          $"Your support ticket has been successfully created and assigned to our system.\n\n" +
+                          $"## 📋 Ticket Details\n" +
+                          $"• **🎫 Ticket ID:** `{ticket.Id}`\n" +
+                          $"• **📝 Title:** {ticket.Title}\n" +
+                          $"• **📄 Description:** {ticket.Description}\n" +
+                          $"• **👤 Created by:** {userName}\n" +
+                          $"• **🔄 Status:** {ticket.Status}\n" +
+                          $"• **📅 Created:** {DateTime.Now:MMM dd, yyyy 'at' hh:mm tt}\n\n" +
+                          $"## 🎯 What Happens Next?\n" +
+                          $"1. Your ticket `{ticket.Id}` is now in our support queue\n" +
+                          $"2. Our support team will review and prioritize your request\n" +
+                          $"3. You'll receive updates via Teams as we work on your issue\n" +
+                          $"4. Use ticket ID `{ticket.Id}` for any follow-up communications\n\n" +
+                          $"---\n" +
+                          $"*🤖 This response was generated by the Teams Enterprise Support Hub agent*";
+
+            return response;
+        }
+
+        /// <summary>
+        /// Creates suggested actions for follow-up interactions in M365 Copilot.
+        /// These provide users with clear next steps and improve the conversational flow.
+        /// </summary>
+        private static IList<CardAction> CreateSuggestedActions()
+        {
+            return new List<CardAction>
+            {
+                new CardAction
+                {
+                    Title = "� View All My Tickets",
+                    Type = ActionTypes.ImBack,
+                    Value = "show my tickets"
+                },
+                new CardAction
+                {
+                    Title = "🎫 Create Another Ticket",
+                    Type = ActionTypes.ImBack,
+                    Value = "create ticket"
+                },
+                new CardAction
+                {
+                    Title = "❓ Get Help",
+                    Type = ActionTypes.ImBack,
+                    Value = "help"
+                }
+            };
         }
 
         /// <summary>

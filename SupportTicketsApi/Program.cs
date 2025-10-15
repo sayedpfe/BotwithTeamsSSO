@@ -19,7 +19,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters.ValidAudiences = new[]
         {
             "89155d3a-359d-4603-b821-0504395e331f", // Your bot's app ID
-            "api://89155d3a-359d-4603-b821-0504395e331f" // Alternative format
+            "api://89155d3a-359d-4603-b821-0504395e331f", // Alternative format
+            "api://botid-89155d3a-359d-4603-b821-0504395e331f" // Format with botid- prefix (from OAuth connection)
         };
         
         options.TokenValidationParameters.ValidIssuer = "https://sts.windows.net/b22f8675-8375-455b-941a-67bee4cf7747/";

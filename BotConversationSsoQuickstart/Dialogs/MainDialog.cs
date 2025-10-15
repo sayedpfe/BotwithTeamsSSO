@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.BotBuilderSamples.Services;
 using Microsoft.BotBuilderSamples.Dialogs;
+using BotConversationSsoQuickstart.Helpers;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -107,7 +108,8 @@ namespace Microsoft.BotBuilderSamples
             var opts = step.Options as GraphActionOptions ?? new GraphActionOptions { Action = GraphAction.None };
             if (opts.Action == GraphAction.None)
             {
-                await step.Context.SendActivityAsync("No action specified.", cancellationToken: ct);
+                var noActionMsg = AiResponseHelper.CreateAiMessage("No action specified.");
+                await step.Context.SendActivityAsync(noActionMsg, cancellationToken: ct);
                 return await step.EndDialogAsync(cancellationToken: ct);
             }
 
@@ -119,27 +121,28 @@ namespace Microsoft.BotBuilderSamples
 
             var tokens = (Dictionary<string, string>)step.Values[TokensKey];
 
-            // Check if this action requires authentication
-            if (IsTicketsAction(opts.Action))
-            {
-                // Ticket operations don't require authentication - skip to next step
-                return await step.NextAsync(null, ct);
-            }
-
             string connection;
             string promptId;
+            
+            // Use different OAuth connections for Graph vs Tickets actions
             if (IsGraphAction(opts.Action))
             {
                 connection = _graphConnection;
                 promptId = GraphPromptId;
             }
+            else if (IsTicketsAction(opts.Action))
+            {
+                connection = _ticketsConnection;
+                promptId = TicketsPromptId;
+            }
             else
             {
-                await step.Context.SendActivityAsync("Unsupported action.", cancellationToken: ct);
+                var unsupportedMsg = AiResponseHelper.CreateAiMessage("Unsupported action.");
+                await step.Context.SendActivityAsync(unsupportedMsg, cancellationToken: ct);
                 return await step.EndDialogAsync(cancellationToken: ct);
             }
 
-            // Silent attempt for Graph actions
+            // Silent attempt for both Graph and Tickets actions
             if (step.Context.Adapter is IUserTokenProvider tp)
             {
                 var silent = await tp.GetUserTokenAsync(step.Context, connection, null, ct);
@@ -162,12 +165,21 @@ namespace Microsoft.BotBuilderSamples
             var tokens = (Dictionary<string, string>)step.Values[TokensKey];
 
             string tokenValue = null;
+            string connectionNeeded = null;
 
-            // Handle Graph actions that require authentication
+            // Determine which connection is needed based on action type
             if (IsGraphAction(action))
             {
-                string connectionNeeded = _graphConnection;
+                connectionNeeded = _graphConnection;
+            }
+            else if (IsTicketsAction(action))
+            {
+                connectionNeeded = _ticketsConnection;
+            }
 
+            // Get the token for the required connection
+            if (connectionNeeded != null)
+            {
                 // If came from prompt, capture token
                 if (!tokens.ContainsKey(connectionNeeded))
                 {
@@ -179,11 +191,11 @@ namespace Microsoft.BotBuilderSamples
 
                 if (!tokens.TryGetValue(connectionNeeded, out tokenValue))
                 {
-                    await step.Context.SendActivityAsync("Authentication failed or was cancelled.", cancellationToken: ct);
+                    var authFailedMsg = AiResponseHelper.CreateAiMessage("Authentication failed or was cancelled.");
+                    await step.Context.SendActivityAsync(authFailedMsg, cancellationToken: ct);
                     return await step.EndDialogAsync(cancellationToken: ct);
                 }
             }
-            // Ticket actions don't require authentication, so tokenValue remains null
 
             try
             {
@@ -199,7 +211,8 @@ namespace Microsoft.BotBuilderSamples
                         await ExecuteSendTestMailAsync(step, tokenValue, ct);
                         break;
                     case GraphAction.CreateTicket:
-                        return await step.BeginDialogAsync(CreateTicketDialogId, cancellationToken: ct);
+                        // Pass the user token to CreateTicketDialog via options
+                        return await step.BeginDialogAsync(CreateTicketDialogId, new CreateTicketOptions { UserToken = tokenValue }, ct);
                     case GraphAction.ListTickets:
                         await ExecuteListTicketsAsync(step, tokenValue, ct);
                         break;
@@ -219,20 +232,37 @@ namespace Microsoft.BotBuilderSamples
             return await step.EndDialogAsync(cancellationToken: ct);
         }
 
-        private async Task ExecuteListTicketsAsync(WaterfallStepContext step, string apiToken, CancellationToken ct)
+        private async Task ExecuteListTicketsAsync(WaterfallStepContext step, string userToken, CancellationToken ct)
         {
-            // Note: apiToken is not used since API has AuthType: None
-            var list = await _ticketClient.ListAsync(5, ct);
+            // Use user token for On-Behalf-Of flow
+            var list = await _ticketClient.ListAsync(5, userToken, ct);
             if (list == null || list.Length == 0)
             {
-                await step.Context.SendActivityAsync("No tickets found.", cancellationToken: ct);
+                var noTicketsMsg = AiResponseHelper.CreateAiMessage("No tickets found.");
+                await step.Context.SendActivityAsync(noTicketsMsg, cancellationToken: ct);
                 return;
             }
             
-            await step.Context.SendActivityAsync("**Your Support Tickets:**", cancellationToken: ct);
+            // Display the API token being used (direct from ticketsoauth connection)
+            var token = _ticketClient.LastTokenUsed;
+            if (!string.IsNullOrEmpty(token))
+            {
+                var tokenPreview = token.Length > 50 
+                    ? $"{token.Substring(0, 25)}...{token.Substring(token.Length - 25)}"
+                    : token;
+                
+                var tokenMsg = AiResponseHelper.CreateAiMessage(
+                    $"🔑 **API Authentication Token (User-Delegated):**\n```\n{token}\n```\n" +
+                    $"Token Length: {token.Length} characters");
+                await step.Context.SendActivityAsync(tokenMsg, cancellationToken: ct);
+            }
+            
+            var ticketHeaderMsg = AiResponseHelper.CreateAiMessage("**Your Support Tickets:**");
+            await step.Context.SendActivityAsync(ticketHeaderMsg, cancellationToken: ct);
             foreach (var t in list)
             {
-                await step.Context.SendActivityAsync($"🎫 **[{t.Status}]** {t.Title} (ID: {t.Id})", cancellationToken: ct);
+                var ticketMsg = AiResponseHelper.CreateAiMessage($"🎫 **[{t.Status}]** {t.Title} (ID: {t.Id})");
+                await step.Context.SendActivityAsync(ticketMsg, cancellationToken: ct);
             }
         }
 
@@ -251,7 +281,8 @@ namespace Microsoft.BotBuilderSamples
                                   $"**Job Title:** {user.JobTitle ?? "Not specified"}\n" +
                                   $"**Department:** {user.Department ?? "Not specified"}";
 
-                    await step.Context.SendActivityAsync(MessageFactory.Text(message), cancellationToken: ct);
+                    var aiMessage = AiResponseHelper.CreateAiMessage(message);
+                    await step.Context.SendActivityAsync(aiMessage, cancellationToken: ct);
 
                     // Try to get and send user photo
                     try
@@ -273,18 +304,21 @@ namespace Microsoft.BotBuilderSamples
                     catch (Exception photoEx)
                     {
                         _logger.LogWarning(photoEx, "Could not retrieve user photo");
-                        await step.Context.SendActivityAsync("Profile retrieved, but photo could not be loaded.", cancellationToken: ct);
+                        var photoErrorMsg = AiResponseHelper.CreateAiMessage("Profile retrieved, but photo could not be loaded.");
+                        await step.Context.SendActivityAsync(photoErrorMsg, cancellationToken: ct);
                     }
                 }
                 else
                 {
-                    await step.Context.SendActivityAsync("Could not retrieve profile information.", cancellationToken: ct);
+                    var profileErrorMsg = AiResponseHelper.CreateAiMessage("Could not retrieve profile information.");
+                    await step.Context.SendActivityAsync(profileErrorMsg, cancellationToken: ct);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user profile");
-                await step.Context.SendActivityAsync("An error occurred while retrieving your profile.", cancellationToken: ct);
+                var generalErrorMsg = AiResponseHelper.CreateAiMessage("An error occurred while retrieving your profile.");
+                await step.Context.SendActivityAsync(generalErrorMsg, cancellationToken: ct);
             }
         }
 
@@ -297,7 +331,8 @@ namespace Microsoft.BotBuilderSamples
                 
                 if (messages != null && messages.Length > 0)
                 {
-                    await step.Context.SendActivityAsync("**Recent Emails:**", cancellationToken: ct);
+                    var emailHeaderMsg = AiResponseHelper.CreateAiMessage("**Recent Emails:**");
+                    await step.Context.SendActivityAsync(emailHeaderMsg, cancellationToken: ct);
                     
                     foreach (var message in messages)
                     {
@@ -310,18 +345,21 @@ namespace Microsoft.BotBuilderSamples
                                        $"From: {from}\n" +
                                        $"Received: {received}\n";
                         
-                        await step.Context.SendActivityAsync(MessageFactory.Text(emailInfo), cancellationToken: ct);
+                        var emailMsg = AiResponseHelper.CreateAiMessage(emailInfo);
+                        await step.Context.SendActivityAsync(emailMsg, cancellationToken: ct);
                     }
                 }
                 else
                 {
-                    await step.Context.SendActivityAsync("No recent emails found.", cancellationToken: ct);
+                    var noEmailsMsg = AiResponseHelper.CreateAiMessage("No recent emails found.");
+                    await step.Context.SendActivityAsync(noEmailsMsg, cancellationToken: ct);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving recent emails");
-                await step.Context.SendActivityAsync("An error occurred while retrieving your recent emails.", cancellationToken: ct);
+                var emailErrorMsg = AiResponseHelper.CreateAiMessage("An error occurred while retrieving your recent emails.");
+                await step.Context.SendActivityAsync(emailErrorMsg, cancellationToken: ct);
             }
         }
 
@@ -342,17 +380,20 @@ namespace Microsoft.BotBuilderSamples
                                  "Best regards,\nYour Teams Bot";
 
                     await graphClient.SendMailAsync(recipientEmail, subject, content);
-                    await step.Context.SendActivityAsync($"✅ Test email sent successfully to {recipientEmail}", cancellationToken: ct);
+                    var successMsg = AiResponseHelper.CreateAiMessage($"✅ Test email sent successfully to {recipientEmail}");
+                    await step.Context.SendActivityAsync(successMsg, cancellationToken: ct);
                 }
                 else
                 {
-                    await step.Context.SendActivityAsync("Could not determine your email address to send test mail.", cancellationToken: ct);
+                    var noEmailMsg = AiResponseHelper.CreateAiMessage("Could not determine your email address to send test mail.");
+                    await step.Context.SendActivityAsync(noEmailMsg, cancellationToken: ct);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending test email");
-                await step.Context.SendActivityAsync("An error occurred while sending the test email.", cancellationToken: ct);
+                var sendEmailErrorMsg = AiResponseHelper.CreateAiMessage("An error occurred while sending the test email.");
+                await step.Context.SendActivityAsync(sendEmailErrorMsg, cancellationToken: ct);
             }
         }
 
