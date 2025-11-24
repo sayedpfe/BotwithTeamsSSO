@@ -39,9 +39,17 @@ public class TicketsController : ControllerBase
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var (userId, display) = GetUserIdentity();
         _logger.LogInformation("Create ticket by {UserId} ({Display})", userId, display);
+        
+        // Log session information if provided
+        if (request.Session != null)
+        {
+            _logger.LogInformation("Session info - ConversationId: {ConversationId}, SessionId: {SessionId}, Messages: {MessageCount}",
+                request.Session.ConversationId, request.Session.SessionId, request.Session.Messages?.Count ?? 0);
+        }
+        
         try
         {
-            var entity = await _repo.CreateAsync(userId, display, request.Title, request.Description, ct);
+            var entity = await _repo.CreateAsync(userId, display, request.Title, request.Description, request.Session, ct);
             return CreatedAtAction(nameof(Get), new { id = entity.RowKey }, entity.ToDto());
         }
         catch (Exception ex)

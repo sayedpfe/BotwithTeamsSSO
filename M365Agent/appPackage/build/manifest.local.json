@@ -1,7 +1,7 @@
 {
     "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
     "manifestVersion": "1.22",
-    "version": "1.2.0",
+    "version": "1.0.0",
     "id": "191f102a-c753-4eca-b386-d8ef082b9d19",
     "developer": {
         "name": "Teams Enterprise Support Hub",
@@ -11,11 +11,11 @@
     },
     "name": {
         "short": "Teams Enterprise Support Hub",
-        "full": "Teams Enterprise Support Hub - AI Assistant with M365 Copilot"
+        "full": "Teams Enterprise Support Hub - AI Assistant"
     },
     "description": {
-        "short": "AI-powered support assistant with feedback collection and ticket management.",
-        "full": "Teams Enterprise Support Hub is an intelligent M365 Copilot custom engine agent that helps manage support tickets, provides instant technical assistance with AI labeling and user feedback collection, and streamlines your enterprise support workflow with authenticated access to Microsoft Graph services."
+        "short": "AI-powered enterprise support assistant for ticket management and instant help.",
+        "full": "Teams Enterprise Support Hub is an intelligent assistant that helps manage support tickets, provides instant technical assistance, and streamlines your enterprise support workflow with AI-powered responses and seamless authentication."
     },
     "icons": {
         "outline": "outline.png",
@@ -43,28 +43,16 @@
                     ],
                     "commands": [
                         {
-                            "title": "create ticket",
-                            "description": "Create a new support ticket with interactive form and authentication"
+                            "title": "Create support ticket",
+                            "description": "Create a new support ticket with detailed information"
                         },
                         {
-                            "title": "my tickets",
-                            "description": "View your recent support tickets and their current status"
+                            "title": "Check ticket status", 
+                            "description": "Check the status of existing support tickets"
                         },
                         {
-                            "title": "profile",
-                            "description": "View your Microsoft Graph profile information with SSO authentication"
-                        },
-                        {
-                            "title": "help",
-                            "description": "Show all available commands and features with usage examples"
-                        },
-                        {
-                            "title": "mail",
-                            "description": "Access your recent emails through Microsoft Graph integration"
-                        },
-                        {
-                            "title": "send mail",
-                            "description": "Send a test email using your authenticated Microsoft Graph access"
+                            "title": "Get help with technical issues",
+                            "description": "Get assistance with technical problems and troubleshooting"
                         }
                     ]
                 }
@@ -86,8 +74,8 @@
     "copilotAgents": {
         "customEngineAgents": [
             {
-                "id": "89155d3a-359d-4603-b821-0504395e331f",
-                "type": "bot"
+                "type": "bot",
+                "id": "89155d3a-359d-4603-b821-0504395e331f"
             }
         ]
     }

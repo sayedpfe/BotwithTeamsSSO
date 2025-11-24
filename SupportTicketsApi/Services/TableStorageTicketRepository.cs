@@ -19,7 +19,7 @@ public class TableStorageTicketRepository : ITicketRepository
         _tableClient.CreateIfNotExists();
     }
 
-    public async Task<TicketEntity> CreateAsync(string userId, string userName, string title, string description, CancellationToken ct)
+    public async Task<TicketEntity> CreateAsync(string userId, string userName, string title, string description, SessionInfo? session, CancellationToken ct)
     {
         try
         {
@@ -34,12 +34,25 @@ public class TableStorageTicketRepository : ITicketRepository
                 CreatedByDisplayName = userName,
                 CreatedUtc = DateTimeOffset.UtcNow,
                 LastUpdatedUtc = DateTimeOffset.UtcNow,
-                Deleted = false
+                Deleted = false,
+                
+                // Add session information if provided
+                ConversationId = session?.ConversationId,
+                SessionId = session?.SessionId,
+                TenantId = session?.TenantId,
+                ChannelId = session?.ChannelId,
+                Locale = session?.Locale,
+                ConversationMessages = session?.Messages != null 
+                    ? System.Text.Json.JsonSerializer.Serialize(session.Messages)
+                    : null,
+                MessageCount = session?.Messages?.Count ?? 0
             };
             
             await _tableClient.AddEntityAsync(ticket, ct);
             
-            _logger.LogInformation("Created ticket {Id} for user {UserId} in Table Storage", ticket.RowKey, userId);
+            _logger.LogInformation("Created ticket {Id} for user {UserId} in Table Storage with {MessageCount} messages", 
+                ticket.RowKey, userId, ticket.MessageCount);
+            
             return ticket;
         }
         catch (Exception ex)

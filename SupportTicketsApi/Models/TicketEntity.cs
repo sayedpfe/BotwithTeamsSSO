@@ -18,6 +18,17 @@ public class TicketEntity : ITableEntity
     public DateTimeOffset LastUpdatedUtc { get; set; } = DateTimeOffset.UtcNow;
     public bool Deleted { get; set; }
 
+    // Session and conversation tracking fields
+    public string? ConversationId { get; set; }
+    public string? SessionId { get; set; }
+    public string? TenantId { get; set; }
+    public string? ChannelId { get; set; }
+    public string? Locale { get; set; }
+    
+    // Conversation messages stored as JSON string
+    public string? ConversationMessages { get; set; }
+    public int MessageCount { get; set; }
+
     public ETag ETag { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
 }

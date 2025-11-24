@@ -16,7 +16,7 @@ public class TicketRepository : ITicketRepository
         _logger = logger;
     }
 
-    public async Task<TicketEntity> CreateAsync(string userId, string userName, string title, string description, CancellationToken ct)
+    public async Task<TicketEntity> CreateAsync(string userId, string userName, string title, string description, SessionInfo? session, CancellationToken ct)
     {
         _logger.LogInformation("Creating ticket. Partition={Partition}", userId);
         var entity = new TicketEntity
@@ -28,7 +28,18 @@ public class TicketRepository : ITicketRepository
             CreatedByUserId = userId,
             CreatedByDisplayName = userName,
             CreatedUtc = DateTimeOffset.UtcNow,
-            LastUpdatedUtc = DateTimeOffset.UtcNow
+            LastUpdatedUtc = DateTimeOffset.UtcNow,
+            
+            // Add session information if provided
+            ConversationId = session?.ConversationId,
+            SessionId = session?.SessionId,
+            TenantId = session?.TenantId,
+            ChannelId = session?.ChannelId,
+            Locale = session?.Locale,
+            ConversationMessages = session?.Messages != null 
+                ? System.Text.Json.JsonSerializer.Serialize(session.Messages)
+                : null,
+            MessageCount = session?.Messages?.Count ?? 0
         };
         await _table.AddEntityAsync(entity, ct);
         return entity;

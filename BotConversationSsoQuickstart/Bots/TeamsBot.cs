@@ -1,4 +1,5 @@
-﻿// <copyright file="TeamsBot.cs" company="Microsoft">
+﻿
+// <copyright file="TeamsBot.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 

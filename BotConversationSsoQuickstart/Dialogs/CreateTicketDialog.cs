@@ -43,6 +43,7 @@ namespace Microsoft.BotBuilderSamples
         private const string TitleKey = "ticketTitle";
         private const string DescriptionKey = "ticketDescription";
         private const string UserTokenKey = "userToken";
+        private const string ConversationMessagesKey = "conversationMessages";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CreateTicketDialog"/> class.
@@ -85,9 +86,17 @@ namespace Microsoft.BotBuilderSamples
                 stepContext.Values[UserTokenKey] = options.UserToken;
             }
 
+            // Initialize conversation messages list
+            stepContext.Values[ConversationMessagesKey] = new List<TicketApiClient.MessageInfo>();
+
+            var promptText = "📝 **Create New Support Ticket**\n\nPlease enter a **title** for your support ticket:";
+            
+            // Track bot message
+            TrackMessage(stepContext, "Bot", promptText, "bot");
+
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("📝 **Create New Support Ticket**\n\nPlease enter a **title** for your support ticket:"),
+                Prompt = MessageFactory.Text(promptText),
                 RetryPrompt = MessageFactory.Text("Please provide a valid title for your ticket (at least 3 characters):")
             };
 
@@ -100,11 +109,20 @@ namespace Microsoft.BotBuilderSamples
         private async Task<DialogTurnResult> PromptForDescriptionStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             // Store the title
-            stepContext.Values[TitleKey] = (string)stepContext.Result;
+            var title = (string)stepContext.Result;
+            stepContext.Values[TitleKey] = title;
+
+            // Track user message (title)
+            TrackMessage(stepContext, stepContext.Context.Activity.From?.Name ?? "User", title, "user");
+
+            var promptText = "📄 Please provide a detailed **description** of your issue:";
+            
+            // Track bot message
+            TrackMessage(stepContext, "Bot", promptText, "bot");
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("📄 Please provide a detailed **description** of your issue:"),
+                Prompt = MessageFactory.Text(promptText),
                 RetryPrompt = MessageFactory.Text("Please provide a more detailed description (at least 10 characters):")
             };
 
@@ -117,10 +135,13 @@ namespace Microsoft.BotBuilderSamples
         private async Task<DialogTurnResult> ConfirmTicketStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             // Store the description
-            stepContext.Values[DescriptionKey] = (string)stepContext.Result;
+            var description = (string)stepContext.Result;
+            stepContext.Values[DescriptionKey] = description;
+
+            // Track user message (description)
+            TrackMessage(stepContext, stepContext.Context.Activity.From?.Name ?? "User", description, "user");
 
             var title = (string)stepContext.Values[TitleKey];
-            var description = (string)stepContext.Values[DescriptionKey];
 
             // Get user information
             var user = stepContext.Context.Activity.From;
@@ -131,6 +152,9 @@ namespace Microsoft.BotBuilderSamples
                                $"**Description:** {description}\n" +
                                $"**Created by:** {userName}\n\n" +
                                $"Do you want to create this support ticket?";
+
+            // Track bot message
+            TrackMessage(stepContext, "Bot", confirmMessage, "bot");
 
             var promptOptions = new PromptOptions
             {
@@ -147,6 +171,9 @@ namespace Microsoft.BotBuilderSamples
         {
             var confirmed = (bool)stepContext.Result;
 
+            // Track user confirmation response
+            TrackMessage(stepContext, stepContext.Context.Activity.From?.Name ?? "User", confirmed ? "Yes" : "No", "user");
+
             if (!confirmed)
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text("❌ Ticket creation cancelled."), cancellationToken);
@@ -157,7 +184,8 @@ namespace Microsoft.BotBuilderSamples
             var description = (string)stepContext.Values[DescriptionKey];
 
             // Get user information from Teams context
-            var user = stepContext.Context.Activity.From;
+            var activity = stepContext.Context.Activity;
+            var user = activity.From;
             var userName = user?.Name ?? "Unknown User";
 
             // Show progress message to user with streaming (M365 Copilot requirement)
@@ -170,11 +198,17 @@ namespace Microsoft.BotBuilderSamples
                     ? stepContext.Values[UserTokenKey] as string 
                     : null;
 
+                // Build session information from conversation context
+                var sessionInfo = BuildSessionInfo(stepContext, activity, userName);
+
+                _logger.LogInformation("Creating ticket with session tracking - ConversationId: {ConversationId}, Messages: {MessageCount}", 
+                    sessionInfo.ConversationId, sessionInfo.Messages.Count);
+
                 // Create a timeout cancellation token (30 seconds)
                 using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-                var ticket = await _ticketClient.CreateAsync(title, description, userToken, combinedCts.Token);
+                var ticket = await _ticketClient.CreateAsync(title, description, userToken, sessionInfo, combinedCts.Token);
 
                 if (ticket != null)
                 {
@@ -300,6 +334,56 @@ namespace Microsoft.BotBuilderSamples
                     Value = "help"
                 }
             };
+        }
+
+        /// <summary>
+        /// Tracks a message in the conversation history for session tracking.
+        /// </summary>
+        private void TrackMessage(WaterfallStepContext stepContext, string from, string text, string messageType)
+        {
+            if (!stepContext.Values.ContainsKey(ConversationMessagesKey))
+            {
+                stepContext.Values[ConversationMessagesKey] = new List<TicketApiClient.MessageInfo>();
+            }
+
+            var messages = (List<TicketApiClient.MessageInfo>)stepContext.Values[ConversationMessagesKey];
+            
+            messages.Add(new TicketApiClient.MessageInfo
+            {
+                MessageId = Guid.NewGuid().ToString(),
+                From = from,
+                Text = text,
+                Timestamp = DateTime.UtcNow,
+                MessageType = messageType
+            });
+
+            _logger.LogInformation("Tracked {MessageType} message from {From}: {Preview}", 
+                messageType, from, text.Length > 50 ? text.Substring(0, 50) + "..." : text);
+        }
+
+        /// <summary>
+        /// Builds SessionInfo object from conversation context and tracked messages.
+        /// </summary>
+        private TicketApiClient.SessionInfo BuildSessionInfo(WaterfallStepContext stepContext, Activity activity, string userName)
+        {
+            var messages = stepContext.Values.ContainsKey(ConversationMessagesKey)
+                ? (List<TicketApiClient.MessageInfo>)stepContext.Values[ConversationMessagesKey]
+                : new List<TicketApiClient.MessageInfo>();
+
+            var sessionInfo = new TicketApiClient.SessionInfo
+            {
+                ConversationId = activity.Conversation?.Id,
+                SessionId = Guid.NewGuid().ToString(), // Generate unique session ID for this ticket creation
+                UserId = activity.From?.Id,
+                UserName = userName,
+                TenantId = activity.Conversation?.TenantId,
+                ChannelId = activity.ChannelId,
+                Locale = activity.Locale ?? "en-US",
+                Timestamp = DateTime.UtcNow,
+                Messages = messages
+            };
+
+            return sessionInfo;
         }
 
         /// <summary>

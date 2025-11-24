@@ -23,6 +23,15 @@ public class FileTicketRepository : ITicketRepository
         public DateTimeOffset LastUpdatedUtc { get; set; }
         public bool Deleted { get; set; }
         public int Version { get; set; } = 0;
+        
+        // Session tracking fields
+        public string? ConversationId { get; set; }
+        public string? SessionId { get; set; }
+        public string? TenantId { get; set; }
+        public string? ChannelId { get; set; }
+        public string? Locale { get; set; }
+        public string? ConversationMessages { get; set; }
+        public int MessageCount { get; set; }
     }
 
     private class FileModel
@@ -81,10 +90,17 @@ public class FileTicketRepository : ITicketRepository
             CreatedByDisplayName = s.CreatedByDisplayName,
             CreatedUtc = s.CreatedUtc,
             LastUpdatedUtc = s.LastUpdatedUtc,
-            Deleted = s.Deleted
+            Deleted = s.Deleted,
+            ConversationId = s.ConversationId,
+            SessionId = s.SessionId,
+            TenantId = s.TenantId,
+            ChannelId = s.ChannelId,
+            Locale = s.Locale,
+            ConversationMessages = s.ConversationMessages,
+            MessageCount = s.MessageCount
         };
 
-    public Task<TicketEntity> CreateAsync(string userId, string userName, string title, string description, CancellationToken ct)
+    public Task<TicketEntity> CreateAsync(string userId, string userName, string title, string description, SessionInfo? session, CancellationToken ct)
     {
         var now = DateTimeOffset.UtcNow;
         var stored = new StoredTicket
@@ -96,7 +112,18 @@ public class FileTicketRepository : ITicketRepository
             Status = "New",
             CreatedByDisplayName = userName,
             CreatedUtc = now,
-            LastUpdatedUtc = now
+            LastUpdatedUtc = now,
+            
+            // Add session information if provided
+            ConversationId = session?.ConversationId,
+            SessionId = session?.SessionId,
+            TenantId = session?.TenantId,
+            ChannelId = session?.ChannelId,
+            Locale = session?.Locale,
+            ConversationMessages = session?.Messages != null 
+                ? JsonSerializer.Serialize(session.Messages)
+                : null,
+            MessageCount = session?.Messages?.Count ?? 0
         };
 
         lock (_lock)
@@ -106,7 +133,8 @@ public class FileTicketRepository : ITicketRepository
             WriteFile(file);
         }
 
-        _logger.LogInformation("Created file-backed ticket {Id} for user {User}", stored.Id, userId);
+        _logger.LogInformation("Created file-backed ticket {Id} for user {User} with {MessageCount} messages", 
+            stored.Id, userId, stored.MessageCount);
         return Task.FromResult(Map(stored));
     }
 

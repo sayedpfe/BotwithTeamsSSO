@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -23,7 +24,37 @@ namespace Microsoft.BotBuilderSamples.Services
         public string LastTokenUsed { get; private set; }
 
         public record TicketDto(string Id, string Title, string Description, string Status);
-        public record CreateTicketRequest(string Title, string Description);
+        
+        // Session tracking models
+        public class MessageInfo
+        {
+            public string MessageId { get; set; }
+            public string From { get; set; }
+            public string Text { get; set; }
+            public DateTime Timestamp { get; set; }
+            public string MessageType { get; set; } // "bot" or "user"
+        }
+
+        public class SessionInfo
+        {
+            public string ConversationId { get; set; }
+            public string SessionId { get; set; }
+            public string UserId { get; set; }
+            public string UserName { get; set; }
+            public string TenantId { get; set; }
+            public string ChannelId { get; set; }
+            public string Locale { get; set; }
+            public DateTime Timestamp { get; set; }
+            public List<MessageInfo> Messages { get; set; } = new List<MessageInfo>();
+        }
+
+        public class CreateTicketRequest
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public SessionInfo Session { get; set; }
+        }
+        
         public record FeedbackDto(string Id, string Type, string Comment, DateTime CreatedAt);
 
         public TicketApiClient(HttpClient http, IConfiguration cfg)
@@ -71,12 +102,18 @@ namespace Microsoft.BotBuilderSamples.Services
             return await Task.FromResult(userToken);
         }
 
-        public async Task<TicketDto> CreateAsync(string title, string description, string userToken, CancellationToken ct)
+        public async Task<TicketDto> CreateAsync(string title, string description, string userToken, SessionInfo sessionInfo, CancellationToken ct)
         {
             try
             {
                 Console.WriteLine($"[TicketApiClient.CreateAsync] Starting - Title: {title}");
                 Console.WriteLine($"[TicketApiClient.CreateAsync] User token provided: {!string.IsNullOrEmpty(userToken)}");
+                Console.WriteLine($"[TicketApiClient.CreateAsync] Session info provided: {sessionInfo != null}");
+                
+                if (sessionInfo != null)
+                {
+                    Console.WriteLine($"[TicketApiClient.CreateAsync] Session details - ConversationId: {sessionInfo.ConversationId}, Messages: {sessionInfo.Messages?.Count ?? 0}");
+                }
                 
                 using var req = new HttpRequestMessage(HttpMethod.Post, $"{_base}/api/tickets");
                 
@@ -90,7 +127,14 @@ namespace Microsoft.BotBuilderSamples.Services
                     Console.WriteLine("[TicketApiClient.CreateAsync] Authorization header added");
                 }
 
-                req.Content = JsonContent.Create(new CreateTicketRequest(title, description));
+                var requestBody = new CreateTicketRequest
+                {
+                    Title = title,
+                    Description = description,
+                    Session = sessionInfo
+                };
+
+                req.Content = JsonContent.Create(requestBody);
                 Console.WriteLine($"[TicketApiClient.CreateAsync] Making POST request to: {_base}/api/tickets");
                 
                 var resp = await _http.SendAsync(req, ct);
